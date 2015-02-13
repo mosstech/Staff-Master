@@ -136,7 +136,8 @@ bool _combinationNotesIsPressed;
 bool _didReleaseNothing;
 
 //Range
-bool _screenIsRange;
+bool _screenIsLowRange;
+bool _screenIsHighRange;
 
 //Game
 NSMutableArray *_notePressedFlags;
@@ -169,7 +170,8 @@ static inline CGPoint rotatedPosition(CGPoint startPosition, float distance, flo
     _screenIsKey = NO;
     _screenIsStaff = NO;
     _screenIsNotes = NO;
-    _screenIsRange = NO;
+    _screenIsLowRange = NO;
+    _screenIsHighRange = NO;
     _screenIsGame = NO;
     
     
@@ -1088,7 +1090,7 @@ static inline CGPoint rotatedPosition(CGPoint startPosition, float distance, flo
 
 -(void)loadLowRange{
     
-    _screenIsRange = YES;
+    _screenIsLowRange = YES;
     
     SKSpriteNode *LowRangeNode = [SKSpriteNode spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"LowRange" stringByAppendingString:_deviceSuffix]]];
     LowRangeNode.name = @"LowRange";
@@ -1099,9 +1101,12 @@ static inline CGPoint rotatedPosition(CGPoint startPosition, float distance, flo
 }
 
 -(void)killLowRange{
+    _screenIsLowRange = NO;
     [self enumerateChildNodesWithName:@"LowRange" usingBlock:^(SKNode *node, BOOL *stop){
         [node removeFromParent];
     }];
+    
+
 }
 
 -(void)transitionLowRangeToHighRange{
@@ -1110,6 +1115,7 @@ static inline CGPoint rotatedPosition(CGPoint startPosition, float distance, flo
 }
 
 -(void)loadHighRange{
+    _screenIsHighRange = YES;
     SKSpriteNode *LowRangeNode = [SKSpriteNode spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"HighRange" stringByAppendingString:_deviceSuffix]]];
     LowRangeNode.name = @"HighRange";
     LowRangeNode.xScale = 0.5;
@@ -1120,7 +1126,7 @@ static inline CGPoint rotatedPosition(CGPoint startPosition, float distance, flo
 
 -(void)killHighRange{
     
-    _screenIsRange = NO;
+    _screenIsHighRange = NO;
     
     [self enumerateChildNodesWithName:@"HighRange" usingBlock:^(SKNode *node, BOOL *stop){
         [node removeFromParent];
@@ -1142,7 +1148,7 @@ static inline CGPoint rotatedPosition(CGPoint startPosition, float distance, flo
 -(void)loadGame{
     
     _screenIsGame = YES;
-    
+    [_notePressedFlags removeAllObjects];
     
     self.backgroundColor = [UIColor whiteColor];
     
@@ -1208,12 +1214,12 @@ static inline CGPoint rotatedPosition(CGPoint startPosition, float distance, flo
         
         if (note.staff == 0) {
             position = CGPointMake(0.5*self.size.width, 0.5*note.position*self.size.height/(NUMBER_OF_STAFF_LINES + 1) + 0.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1));
-            NSLog(@"%i",note.note);
+            //NSLog(@"%i",note.note);
         }
         else
         {
             position = CGPointMake(0.5*self.size.width, 0.5*(note.position + 16)*self.size.height/(NUMBER_OF_STAFF_LINES + 1) + 0.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1));
-            NSLog(@"%i",note.note);
+            //NSLog(@"%i",note.note);
         }
      
         SKSpriteNode *noteNode = [SKSpriteNode spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"Note" stringByAppendingString:_deviceSuffix]]];
@@ -1326,6 +1332,7 @@ void midiInputCallback (const MIDIPacketList *list,
     [MIDIUtility processMessage:list];
     
     
+    
 
     
 }
@@ -1337,14 +1344,27 @@ void midiInputCallback (const MIDIPacketList *list,
 
 -(void)handlePacketList:(NSValue*)packetList{
     
+    //Reconstruct MIDIPacketList from NSValue
     MIDIPacketList *midiPacketList;
     [packetList getValue:&midiPacketList];
     
-    
+    //Set the Lowest Note the game will display
+    if (_screenIsLowRange) {
+        _gameData.lowRange = [MIDIUtility getNoteNumber:midiPacketList];
+    }
+    //Set the Highest Note the game will display
+    else if(_screenIsHighRange) {
+        _gameData.highRange = [MIDIUtility getNoteNumber:midiPacketList];
+    }
+    //Check if note on or note off
+    else if (_screenIsGame) {
         if([MIDIUtility getMessageType:midiPacketList] == 0x90)
             [self checkNoteHitWithNumber:[MIDIUtility getNoteNumber:midiPacketList]];
         else if ([MIDIUtility getMessageType:midiPacketList] == 0x80)
             [self checkNoteReleaseWithNumber:[MIDIUtility getNoteNumber:midiPacketList]];
+    }
+
+    
     
     [_fifoMidiEvents removeObjectAtIndex:_fifoMidiEvents.count - 1];
     
@@ -1392,12 +1412,14 @@ void midiInputCallback (const MIDIPacketList *list,
 -(void)checkNoteReleaseWithNumber:(int)userKeyNumber
 {
     
-    
-    for (int i = 0; i < (int)_notePressedFlags.count; i++) {
-        if ([_notePressedFlags[i] intValue] == userKeyNumber) {
-            [_notePressedFlags removeObjectAtIndex:i];
+    if (_notePressedFlags.count > 0) {
+        for (int i = 0; i < (int)_notePressedFlags.count; i++) {
+            if ([_notePressedFlags[i] intValue] == userKeyNumber) {
+                [_notePressedFlags removeObjectAtIndex:i];
+            }
         }
     }
+    
 }
 
 
