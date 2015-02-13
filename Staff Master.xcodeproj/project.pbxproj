@@ -1,0 +1,513 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		177B1BF21A880AB800E9D769 /* MIDIPacketListObject.m in Sources */ = {isa = PBXBuildFile; fileRef = 177B1BF11A880AB800E9D769 /* MIDIPacketListObject.m */; };
+		177B1BF61A880B2C00E9D769 /* MIDIPacketObject.m in Sources */ = {isa = PBXBuildFile; fileRef = 177B1BF51A880B2C00E9D769 /* MIDIPacketObject.m */; };
+		824E9ECF1A7AC46D0037C0DD /* Note.m in Sources */ = {isa = PBXBuildFile; fileRef = 824E9ECE1A7AC46D0037C0DD /* Note.m */; };
+		824E9ED61A7BEF7D0037C0DD /* Chords0.plist in Resources */ = {isa = PBXBuildFile; fileRef = 824E9ED51A7BEF7D0037C0DD /* Chords0.plist */; };
+		824E9ED91A7ECEB90037C0DD /* Chord.m in Sources */ = {isa = PBXBuildFile; fileRef = 824E9ED81A7ECEB90037C0DD /* Chord.m */; };
+		82DFC5751A81C54D000BB94C /* MIDIUtility.m in Sources */ = {isa = PBXBuildFile; fileRef = 82DFC5741A81C54D000BB94C /* MIDIUtility.m */; };
+		82DFC5781A81C5A4000BB94C /* AudioUtility.m in Sources */ = {isa = PBXBuildFile; fileRef = 82DFC5771A81C5A4000BB94C /* AudioUtility.m */; };
+		82DFC57B1A81E252000BB94C /* MIDIDevice.m in Sources */ = {isa = PBXBuildFile; fileRef = 82DFC57A1A81E252000BB94C /* MIDIDevice.m */; };
+		82E02B441A72B46600747A6E /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 82E02B431A72B46600747A6E /* main.m */; };
+		82E02B471A72B46600747A6E /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 82E02B461A72B46600747A6E /* AppDelegate.m */; };
+		82E02B4A1A72B46600747A6E /* GameScene.m in Sources */ = {isa = PBXBuildFile; fileRef = 82E02B491A72B46600747A6E /* GameScene.m */; };
+		82E02B4C1A72B46600747A6E /* GameScene.sks in Resources */ = {isa = PBXBuildFile; fileRef = 82E02B4B1A72B46600747A6E /* GameScene.sks */; };
+		82E02B4F1A72B46600747A6E /* GameViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 82E02B4E1A72B46600747A6E /* GameViewController.m */; };
+		82E02B521A72B46600747A6E /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 82E02B501A72B46600747A6E /* Main.storyboard */; };
+		82E02B541A72B46600747A6E /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 82E02B531A72B46600747A6E /* Images.xcassets */; };
+		82E02B571A72B46600747A6E /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 82E02B551A72B46600747A6E /* LaunchScreen.xib */; };
+		82E02B631A72B46600747A6E /* Staff_MasterTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 82E02B621A72B46600747A6E /* Staff_MasterTests.m */; };
+		82E02B711A75585B00747A6E /* GameData.m in Sources */ = {isa = PBXBuildFile; fileRef = 82E02B701A75585B00747A6E /* GameData.m */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		82E02B5D1A72B46600747A6E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 82E02B361A72B46600747A6E /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 82E02B3D1A72B46600747A6E;
+			remoteInfo = "Staff Master";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		177B1BF01A880AB800E9D769 /* MIDIPacketListObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MIDIPacketListObject.h; sourceTree = "<group>"; };
+		177B1BF11A880AB800E9D769 /* MIDIPacketListObject.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MIDIPacketListObject.m; sourceTree = "<group>"; };
+		177B1BF41A880B2C00E9D769 /* MIDIPacketObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MIDIPacketObject.h; sourceTree = "<group>"; };
+		177B1BF51A880B2C00E9D769 /* MIDIPacketObject.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MIDIPacketObject.m; sourceTree = "<group>"; };
+		824E9ECD1A7AC46D0037C0DD /* Note.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Note.h; sourceTree = "<group>"; };
+		824E9ECE1A7AC46D0037C0DD /* Note.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Note.m; sourceTree = "<group>"; };
+		824E9ED51A7BEF7D0037C0DD /* Chords0.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Chords0.plist; sourceTree = "<group>"; };
+		824E9ED71A7ECEB90037C0DD /* Chord.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Chord.h; sourceTree = "<group>"; };
+		824E9ED81A7ECEB90037C0DD /* Chord.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Chord.m; sourceTree = "<group>"; };
+		82DFC5731A81C54D000BB94C /* MIDIUtility.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MIDIUtility.h; sourceTree = "<group>"; };
+		82DFC5741A81C54D000BB94C /* MIDIUtility.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MIDIUtility.m; sourceTree = "<group>"; };
+		82DFC5761A81C5A4000BB94C /* AudioUtility.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AudioUtility.h; sourceTree = "<group>"; };
+		82DFC5771A81C5A4000BB94C /* AudioUtility.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AudioUtility.m; sourceTree = "<group>"; };
+		82DFC5791A81E252000BB94C /* MIDIDevice.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MIDIDevice.h; sourceTree = "<group>"; };
+		82DFC57A1A81E252000BB94C /* MIDIDevice.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MIDIDevice.m; sourceTree = "<group>"; };
+		82E02B3E1A72B46600747A6E /* Staff Master.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Staff Master.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		82E02B421A72B46600747A6E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		82E02B431A72B46600747A6E /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		82E02B451A72B46600747A6E /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
+		82E02B461A72B46600747A6E /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
+		82E02B481A72B46600747A6E /* GameScene.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GameScene.h; sourceTree = "<group>"; };
+		82E02B491A72B46600747A6E /* GameScene.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GameScene.m; sourceTree = "<group>"; };
+		82E02B4B1A72B46600747A6E /* GameScene.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = GameScene.sks; sourceTree = "<group>"; };
+		82E02B4D1A72B46600747A6E /* GameViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GameViewController.h; sourceTree = "<group>"; };
+		82E02B4E1A72B46600747A6E /* GameViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GameViewController.m; sourceTree = "<group>"; };
+		82E02B511A72B46600747A6E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		82E02B531A72B46600747A6E /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
+		82E02B561A72B46600747A6E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/LaunchScreen.xib; sourceTree = "<group>"; };
+		82E02B5C1A72B46600747A6E /* Staff MasterTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Staff MasterTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		82E02B611A72B46600747A6E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		82E02B621A72B46600747A6E /* Staff_MasterTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Staff_MasterTests.m; sourceTree = "<group>"; };
+		82E02B6F1A75585B00747A6E /* GameData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GameData.h; sourceTree = "<group>"; };
+		82E02B701A75585B00747A6E /* GameData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GameData.m; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		82E02B3B1A72B46600747A6E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		82E02B591A72B46600747A6E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		177B1BF31A880AD600E9D769 /* MIDI */ = {
+			isa = PBXGroup;
+			children = (
+				82DFC5791A81E252000BB94C /* MIDIDevice.h */,
+				82DFC57A1A81E252000BB94C /* MIDIDevice.m */,
+				177B1BF01A880AB800E9D769 /* MIDIPacketListObject.h */,
+				177B1BF11A880AB800E9D769 /* MIDIPacketListObject.m */,
+				82DFC5731A81C54D000BB94C /* MIDIUtility.h */,
+				82DFC5741A81C54D000BB94C /* MIDIUtility.m */,
+				177B1BF41A880B2C00E9D769 /* MIDIPacketObject.h */,
+				177B1BF51A880B2C00E9D769 /* MIDIPacketObject.m */,
+			);
+			name = MIDI;
+			sourceTree = "<group>";
+		};
+		82E02B351A72B46600747A6E = {
+			isa = PBXGroup;
+			children = (
+				82E02B401A72B46600747A6E /* Staff Master */,
+				82E02B5F1A72B46600747A6E /* Staff MasterTests */,
+				82E02B3F1A72B46600747A6E /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		82E02B3F1A72B46600747A6E /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				82E02B3E1A72B46600747A6E /* Staff Master.app */,
+				82E02B5C1A72B46600747A6E /* Staff MasterTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		82E02B401A72B46600747A6E /* Staff Master */ = {
+			isa = PBXGroup;
+			children = (
+				177B1BF31A880AD600E9D769 /* MIDI */,
+				82DFC5761A81C5A4000BB94C /* AudioUtility.h */,
+				82DFC5771A81C5A4000BB94C /* AudioUtility.m */,
+				82E02B451A72B46600747A6E /* AppDelegate.h */,
+				82E02B461A72B46600747A6E /* AppDelegate.m */,
+				82E02B481A72B46600747A6E /* GameScene.h */,
+				82E02B491A72B46600747A6E /* GameScene.m */,
+				82E02B4B1A72B46600747A6E /* GameScene.sks */,
+				82E02B4D1A72B46600747A6E /* GameViewController.h */,
+				82E02B4E1A72B46600747A6E /* GameViewController.m */,
+				82E02B501A72B46600747A6E /* Main.storyboard */,
+				82E02B531A72B46600747A6E /* Images.xcassets */,
+				82E02B551A72B46600747A6E /* LaunchScreen.xib */,
+				82E02B411A72B46600747A6E /* Supporting Files */,
+				82E02B6F1A75585B00747A6E /* GameData.h */,
+				82E02B701A75585B00747A6E /* GameData.m */,
+				824E9ECD1A7AC46D0037C0DD /* Note.h */,
+				824E9ECE1A7AC46D0037C0DD /* Note.m */,
+				824E9ED51A7BEF7D0037C0DD /* Chords0.plist */,
+				824E9ED71A7ECEB90037C0DD /* Chord.h */,
+				824E9ED81A7ECEB90037C0DD /* Chord.m */,
+			);
+			path = "Staff Master";
+			sourceTree = "<group>";
+		};
+		82E02B411A72B46600747A6E /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				82E02B421A72B46600747A6E /* Info.plist */,
+				82E02B431A72B46600747A6E /* main.m */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		82E02B5F1A72B46600747A6E /* Staff MasterTests */ = {
+			isa = PBXGroup;
+			children = (
+				82E02B621A72B46600747A6E /* Staff_MasterTests.m */,
+				82E02B601A72B46600747A6E /* Supporting Files */,
+			);
+			path = "Staff MasterTests";
+			sourceTree = "<group>";
+		};
+		82E02B601A72B46600747A6E /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				82E02B611A72B46600747A6E /* Info.plist */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		82E02B3D1A72B46600747A6E /* Staff Master */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 82E02B661A72B46600747A6E /* Build configuration list for PBXNativeTarget "Staff Master" */;
+			buildPhases = (
+				82E02B3A1A72B46600747A6E /* Sources */,
+				82E02B3B1A72B46600747A6E /* Frameworks */,
+				82E02B3C1A72B46600747A6E /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "Staff Master";
+			productName = "Staff Master";
+			productReference = 82E02B3E1A72B46600747A6E /* Staff Master.app */;
+			productType = "com.apple.product-type.application";
+		};
+		82E02B5B1A72B46600747A6E /* Staff MasterTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 82E02B691A72B46600747A6E /* Build configuration list for PBXNativeTarget "Staff MasterTests" */;
+			buildPhases = (
+				82E02B581A72B46600747A6E /* Sources */,
+				82E02B591A72B46600747A6E /* Frameworks */,
+				82E02B5A1A72B46600747A6E /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				82E02B5E1A72B46600747A6E /* PBXTargetDependency */,
+			);
+			name = "Staff MasterTests";
+			productName = "Staff MasterTests";
+			productReference = 82E02B5C1A72B46600747A6E /* Staff MasterTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		82E02B361A72B46600747A6E /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0610;
+				ORGANIZATIONNAME = MOSSTECH;
+				TargetAttributes = {
+					82E02B3D1A72B46600747A6E = {
+						CreatedOnToolsVersion = 6.1.1;
+						DevelopmentTeam = 5G5R67T5U3;
+					};
+					82E02B5B1A72B46600747A6E = {
+						CreatedOnToolsVersion = 6.1.1;
+						DevelopmentTeam = 5G5R67T5U3;
+						TestTargetID = 82E02B3D1A72B46600747A6E;
+					};
+				};
+			};
+			buildConfigurationList = 82E02B391A72B46600747A6E /* Build configuration list for PBXProject "Staff Master" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 82E02B351A72B46600747A6E;
+			productRefGroup = 82E02B3F1A72B46600747A6E /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				82E02B3D1A72B46600747A6E /* Staff Master */,
+				82E02B5B1A72B46600747A6E /* Staff MasterTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		82E02B3C1A72B46600747A6E /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				82E02B571A72B46600747A6E /* LaunchScreen.xib in Resources */,
+				82E02B541A72B46600747A6E /* Images.xcassets in Resources */,
+				82E02B4C1A72B46600747A6E /* GameScene.sks in Resources */,
+				82E02B521A72B46600747A6E /* Main.storyboard in Resources */,
+				824E9ED61A7BEF7D0037C0DD /* Chords0.plist in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		82E02B5A1A72B46600747A6E /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		82E02B3A1A72B46600747A6E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				82E02B711A75585B00747A6E /* GameData.m in Sources */,
+				82E02B4F1A72B46600747A6E /* GameViewController.m in Sources */,
+				82E02B471A72B46600747A6E /* AppDelegate.m in Sources */,
+				177B1BF61A880B2C00E9D769 /* MIDIPacketObject.m in Sources */,
+				824E9ED91A7ECEB90037C0DD /* Chord.m in Sources */,
+				82E02B4A1A72B46600747A6E /* GameScene.m in Sources */,
+				82E02B441A72B46600747A6E /* main.m in Sources */,
+				82DFC5781A81C5A4000BB94C /* AudioUtility.m in Sources */,
+				177B1BF21A880AB800E9D769 /* MIDIPacketListObject.m in Sources */,
+				824E9ECF1A7AC46D0037C0DD /* Note.m in Sources */,
+				82DFC57B1A81E252000BB94C /* MIDIDevice.m in Sources */,
+				82DFC5751A81C54D000BB94C /* MIDIUtility.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		82E02B581A72B46600747A6E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				82E02B631A72B46600747A6E /* Staff_MasterTests.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		82E02B5E1A72B46600747A6E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 82E02B3D1A72B46600747A6E /* Staff Master */;
+			targetProxy = 82E02B5D1A72B46600747A6E /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		82E02B501A72B46600747A6E /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				82E02B511A72B46600747A6E /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+		82E02B551A72B46600747A6E /* LaunchScreen.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				82E02B561A72B46600747A6E /* Base */,
+			);
+			name = LaunchScreen.xib;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		82E02B641A72B46600747A6E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.1;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+			};
+			name = Debug;
+		};
+		82E02B651A72B46600747A6E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = YES;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.1;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = iphoneos;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		82E02B671A72B46600747A6E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				INFOPLIST_FILE = "Staff Master/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
+			};
+			name = Debug;
+		};
+		82E02B681A72B46600747A6E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				INFOPLIST_FILE = "Staff Master/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
+			};
+			name = Release;
+		};
+		82E02B6A1A72B46600747A6E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(SDKROOT)/Developer/Library/Frameworks",
+					"$(inherited)",
+				);
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				INFOPLIST_FILE = "Staff MasterTests/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Staff Master.app/Staff Master";
+			};
+			name = Debug;
+		};
+		82E02B6B1A72B46600747A6E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(SDKROOT)/Developer/Library/Frameworks",
+					"$(inherited)",
+				);
+				INFOPLIST_FILE = "Staff MasterTests/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Staff Master.app/Staff Master";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		82E02B391A72B46600747A6E /* Build configuration list for PBXProject "Staff Master" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				82E02B641A72B46600747A6E /* Debug */,
+				82E02B651A72B46600747A6E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		82E02B661A72B46600747A6E /* Build configuration list for PBXNativeTarget "Staff Master" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				82E02B671A72B46600747A6E /* Debug */,
+				82E02B681A72B46600747A6E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		82E02B691A72B46600747A6E /* Build configuration list for PBXNativeTarget "Staff MasterTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				82E02B6A1A72B46600747A6E /* Debug */,
+				82E02B6B1A72B46600747A6E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 82E02B361A72B46600747A6E /* Project object */;
+}
