@@ -143,9 +143,16 @@ bool _screenIsHighRange;
 NSMutableArray *_notePressedFlags;
 NSMutableArray *_fifoMidiEvents;
 
+SKLabelNode *_currentNameNode;
+SKLabelNode *_timeRemainingNode;
+SKLabelNode *_scoreNode;
+
 bool _screenIsGame;
 
 NSArray *_currentNotes;
+NSString *_currentName;
+int _timeRemaining;
+int _score;
 
 static inline CGPoint rotatedPosition(CGPoint startPosition, float distance, float radians){
     
@@ -156,6 +163,18 @@ static inline CGPoint rotatedPosition(CGPoint startPosition, float distance, flo
     
 }
 
+void midiInputCallback (const MIDIPacketList *list,
+                        void *procRef,
+                        void *srcRef)
+{
+    
+    
+    
+    [_gameScene addPacketListToFifo:list];
+    [MIDIUtility processMessage:list];
+    
+    
+}
 
 -(void)didMoveToView:(SKView *)view {
     /* Setup your scene here */
@@ -286,6 +305,8 @@ static inline CGPoint rotatedPosition(CGPoint startPosition, float distance, flo
     
     else if(_screenIsGame){
         [self  removeGameNotes];
+        _score = _score + 100;
+        _scoreNode.text = [NSString stringWithFormat:@"%i",_score];
         [self loadNotesFromChord:_chordCatalog[arc4random_uniform((int)_chordCatalog.count - 1)]];
     }
     
@@ -630,90 +651,117 @@ static inline CGPoint rotatedPosition(CGPoint startPosition, float distance, flo
 -(void) didSimulatePhysics{
     
     //write code for -- dont monitor if not on particular page
-    [self monitorMenu];
-    [self monitorKey];
-    [self monitorStaff];
-    [self monitorNotes];
-    
-    if(_didReleaseNothing == YES){
-        //write code for -- if not pressed, dont enumerate
+    if (_screenIsMenu) {
+        [self monitorMenu];
+        if(_didReleaseNothing == YES){
+            [self enumerateChildNodesWithName:@"PlayButton" usingBlock:^(SKNode *node, BOOL *stop){
+                ((SKSpriteNode*)node).alpha = 1.0;
+            }];
+            [self enumerateChildNodesWithName:@"MidiDeviceName" usingBlock:^(SKNode *node, BOOL *stop){
+                ((SKSpriteNode*)node).alpha = 1.0;
+            }];
+            _didReleaseNothing = NO;
+        }
+    }
+    else if (_screenIsKey) {
+        [self monitorKey];
+        if (_didReleaseNothing == YES) {
+            [self enumerateChildNodesWithName:@"CMajor" usingBlock:^(SKNode *node, BOOL *stop){
+                ((SKSpriteNode*)node).alpha = 1.0;
+            }];
+            [self enumerateChildNodesWithName:@"GMajor" usingBlock:^(SKNode *node, BOOL *stop){
+                ((SKSpriteNode*)node).alpha = 1.0;
+            }];
+            [self enumerateChildNodesWithName:@"DMajor" usingBlock:^(SKNode *node, BOOL *stop){
+                ((SKSpriteNode*)node).alpha = 1.0;
+            }];
+            [self enumerateChildNodesWithName:@"AMajor" usingBlock:^(SKNode *node, BOOL *stop){
+                ((SKSpriteNode*)node).alpha = 1.0;
+            }];
+            [self enumerateChildNodesWithName:@"EMajor" usingBlock:^(SKNode *node, BOOL *stop){
+                ((SKSpriteNode*)node).alpha = 1.0;
+            }];
+            [self enumerateChildNodesWithName:@"BMajor" usingBlock:^(SKNode *node, BOOL *stop){
+                ((SKSpriteNode*)node).alpha = 1.0;
+            }];
+            [self enumerateChildNodesWithName:@"CFlatMajor" usingBlock:^(SKNode *node, BOOL *stop){
+                ((SKSpriteNode*)node).alpha = 1.0;
+            }];
+            [self enumerateChildNodesWithName:@"FSharpMajor" usingBlock:^(SKNode *node, BOOL *stop){
+                ((SKSpriteNode*)node).alpha = 1.0;
+            }];
+            [self enumerateChildNodesWithName:@"GFlatMajor" usingBlock:^(SKNode *node, BOOL *stop){
+                ((SKSpriteNode*)node).alpha = 1.0;
+            }];
+            [self enumerateChildNodesWithName:@"CSharpMajor" usingBlock:^(SKNode *node, BOOL *stop){
+                ((SKSpriteNode*)node).alpha = 1.0;
+            }];
+            [self enumerateChildNodesWithName:@"DFlatMajor" usingBlock:^(SKNode *node, BOOL *stop){
+                ((SKSpriteNode*)node).alpha = 1.0;
+            }];
+            [self enumerateChildNodesWithName:@"AFlatMajor" usingBlock:^(SKNode *node, BOOL *stop){
+                ((SKSpriteNode*)node).alpha = 1.0;
+            }];
+            [self enumerateChildNodesWithName:@"EFlatMajor" usingBlock:^(SKNode *node, BOOL *stop){
+                ((SKSpriteNode*)node).alpha = 1.0;
+            }];
+            [self enumerateChildNodesWithName:@"BFlatMajor" usingBlock:^(SKNode *node, BOOL *stop){
+                ((SKSpriteNode*)node).alpha = 1.0;
+            }];
+            [self enumerateChildNodesWithName:@"FMajor" usingBlock:^(SKNode *node, BOOL *stop){
+                ((SKSpriteNode*)node).alpha = 1.0;
+            }];
+            _didReleaseNothing = NO;
+        }
+    }
+    else if (_screenIsStaff){
+        [self monitorStaff];
+        if (_screenIsStaff) {
+            [self enumerateChildNodesWithName:@"TrebleStaff" usingBlock:^(SKNode *node, BOOL *stop){
+                ((SKSpriteNode*)node).alpha = 1.0;
+            }];
+            [self enumerateChildNodesWithName:@"BassStaff" usingBlock:^(SKNode *node, BOOL *stop){
+                ((SKSpriteNode*)node).alpha = 1.0;
+            }];
+            [self enumerateChildNodesWithName:@"GrandStaff" usingBlock:^(SKNode *node, BOOL *stop){
+                ((SKSpriteNode*)node).alpha = 1.0;
+            }];
+            _didReleaseNothing = NO;
+        }
+    }
+    else if (_screenIsNotes){
+       [self monitorNotes];
+        if (_screenIsNotes) {
+            [self enumerateChildNodesWithName:@"SingleNotes" usingBlock:^(SKNode *node, BOOL *stop){
+                ((SKSpriteNode*)node).alpha = 1.0;
+            }];
+            [self enumerateChildNodesWithName:@"MultipleNotes" usingBlock:^(SKNode *node, BOOL *stop){
+                ((SKSpriteNode*)node).alpha = 1.0;
+            }];
+            [self enumerateChildNodesWithName:@"CombinationNotes" usingBlock:^(SKNode *node, BOOL *stop){
+                ((SKSpriteNode*)node).alpha = 1.0;
+            }];
+            _didReleaseNothing = NO;
+        }
+    }
+    else if (_screenIsLowRange || _screenIsHighRange){
+        if ((int)_fifoMidiEvents.count > 0) {
+            [self handlePacketList:_fifoMidiEvents[_fifoMidiEvents.count -1]];
+        }
+    }
+    else if (_screenIsGame) {
+        if ((int)_fifoMidiEvents.count > 0) {
+            [self handlePacketList:_fifoMidiEvents[_fifoMidiEvents.count -1]];
+        }
+        if (_timeRemaining == 0) {
+            [self transtionGameToScore];
+        }
         
-        [self enumerateChildNodesWithName:@"PlayButton" usingBlock:^(SKNode *node, BOOL *stop){
-            ((SKSpriteNode*)node).alpha = 1.0;
-        }];
-        [self enumerateChildNodesWithName:@"MidiDeviceName" usingBlock:^(SKNode *node, BOOL *stop){
-            ((SKSpriteNode*)node).alpha = 1.0;
-        }];
-        [self enumerateChildNodesWithName:@"CMajor" usingBlock:^(SKNode *node, BOOL *stop){
-            ((SKSpriteNode*)node).alpha = 1.0;
-        }];
-        [self enumerateChildNodesWithName:@"GMajor" usingBlock:^(SKNode *node, BOOL *stop){
-            ((SKSpriteNode*)node).alpha = 1.0;
-        }];
-        [self enumerateChildNodesWithName:@"DMajor" usingBlock:^(SKNode *node, BOOL *stop){
-            ((SKSpriteNode*)node).alpha = 1.0;
-        }];
-        [self enumerateChildNodesWithName:@"AMajor" usingBlock:^(SKNode *node, BOOL *stop){
-            ((SKSpriteNode*)node).alpha = 1.0;
-        }];
-        [self enumerateChildNodesWithName:@"EMajor" usingBlock:^(SKNode *node, BOOL *stop){
-            ((SKSpriteNode*)node).alpha = 1.0;
-        }];
-        [self enumerateChildNodesWithName:@"BMajor" usingBlock:^(SKNode *node, BOOL *stop){
-            ((SKSpriteNode*)node).alpha = 1.0;
-        }];
-        [self enumerateChildNodesWithName:@"CFlatMajor" usingBlock:^(SKNode *node, BOOL *stop){
-            ((SKSpriteNode*)node).alpha = 1.0;
-        }];
-        [self enumerateChildNodesWithName:@"FSharpMajor" usingBlock:^(SKNode *node, BOOL *stop){
-            ((SKSpriteNode*)node).alpha = 1.0;
-        }];
-        [self enumerateChildNodesWithName:@"GFlatMajor" usingBlock:^(SKNode *node, BOOL *stop){
-            ((SKSpriteNode*)node).alpha = 1.0;
-        }];
-        [self enumerateChildNodesWithName:@"CSharpMajor" usingBlock:^(SKNode *node, BOOL *stop){
-            ((SKSpriteNode*)node).alpha = 1.0;
-        }];
-        [self enumerateChildNodesWithName:@"DFlatMajor" usingBlock:^(SKNode *node, BOOL *stop){
-            ((SKSpriteNode*)node).alpha = 1.0;
-        }];
-        [self enumerateChildNodesWithName:@"AFlatMajor" usingBlock:^(SKNode *node, BOOL *stop){
-            ((SKSpriteNode*)node).alpha = 1.0;
-        }];
-        [self enumerateChildNodesWithName:@"EFlatMajor" usingBlock:^(SKNode *node, BOOL *stop){
-            ((SKSpriteNode*)node).alpha = 1.0;
-        }];
-        [self enumerateChildNodesWithName:@"BFlatMajor" usingBlock:^(SKNode *node, BOOL *stop){
-            ((SKSpriteNode*)node).alpha = 1.0;
-        }];
-        [self enumerateChildNodesWithName:@"FMajor" usingBlock:^(SKNode *node, BOOL *stop){
-            ((SKSpriteNode*)node).alpha = 1.0;
-        }];
-        [self enumerateChildNodesWithName:@"TrebleStaff" usingBlock:^(SKNode *node, BOOL *stop){
-            ((SKSpriteNode*)node).alpha = 1.0;
-        }];
-        [self enumerateChildNodesWithName:@"BassStaff" usingBlock:^(SKNode *node, BOOL *stop){
-            ((SKSpriteNode*)node).alpha = 1.0;
-        }];
-        [self enumerateChildNodesWithName:@"GrandStaff" usingBlock:^(SKNode *node, BOOL *stop){
-            ((SKSpriteNode*)node).alpha = 1.0;
-        }];
-        [self enumerateChildNodesWithName:@"SingleNotes" usingBlock:^(SKNode *node, BOOL *stop){
-            ((SKSpriteNode*)node).alpha = 1.0;
-        }];
-        [self enumerateChildNodesWithName:@"MultipleNotes" usingBlock:^(SKNode *node, BOOL *stop){
-            ((SKSpriteNode*)node).alpha = 1.0;
-        }];
-        [self enumerateChildNodesWithName:@"CombinationNotes" usingBlock:^(SKNode *node, BOOL *stop){
-            ((SKSpriteNode*)node).alpha = 1.0;
-        }];
-        _didReleaseNothing = NO;
     }
     
-    if ((int)_fifoMidiEvents.count > 0) {
-        
-        [self handlePacketList:_fifoMidiEvents[_fifoMidiEvents.count -1]];
-    }
+    
+
+    
 }
 
 #pragma mark - Menu
@@ -1148,6 +1196,9 @@ static inline CGPoint rotatedPosition(CGPoint startPosition, float distance, flo
 -(void)loadGame{
     
     _screenIsGame = YES;
+    _timeRemaining = 60;
+    _score = 0;
+    
     [_notePressedFlags removeAllObjects];
     
     self.backgroundColor = [UIColor whiteColor];
@@ -1177,60 +1228,94 @@ static inline CGPoint rotatedPosition(CGPoint startPosition, float distance, flo
     trebleClef.position = CGPointMake(0.1*self.size.width, 23*self.size.height/(NUMBER_OF_STAFF_LINES + 1));
     [self addChild:trebleClef];
     
-    
+    _currentNameNode = [SKLabelNode labelNodeWithFontNamed:@"HelveticaNeue-UltraLight"];
+    _currentNameNode.name = @"NoteName";
+    _currentNameNode.fontSize = 0.08*self.size.height;
+    _currentNameNode.fontColor = [UIColor blackColor];
+    _currentNameNode.position = CGPointMake(0.95*self.size.width, 0.05*self.size.height);
+    _currentNameNode.horizontalAlignmentMode = SKLabelHorizontalAlignmentModeRight;
+    [self addChild:_currentNameNode];
    
+    _timeRemainingNode = [SKLabelNode labelNodeWithFontNamed:@"HelveticaNeue-UltraLight"];
+    _timeRemainingNode.name = @"TimeRemaining";
+    _timeRemainingNode.fontSize = 0.08*self.size.height;
+    _timeRemainingNode.fontColor = [UIColor blackColor];
+    _timeRemainingNode.position = CGPointMake(0.95*self.size.width, 0.9*self.size.height);
+    _timeRemainingNode.horizontalAlignmentMode = SKLabelHorizontalAlignmentModeRight;
+    _timeRemainingNode.text = [NSString stringWithFormat:@":%i",_timeRemaining];
+    [self addChild:_timeRemainingNode];
+    
+    _scoreNode = [SKLabelNode labelNodeWithFontNamed:@"HelveticaNeue-UltraLight"];
+    _scoreNode.name = @"Score";
+    _scoreNode.fontSize = 0.08*self.size.height;
+    _scoreNode.fontColor = [UIColor blackColor];
+    _scoreNode.position = CGPointMake(0.05*self.size.width, 0.9*self.size.height);
+    _scoreNode.horizontalAlignmentMode = SKLabelHorizontalAlignmentModeLeft;
+    _scoreNode.text = [NSString stringWithFormat:@"%i",_score];
+    [self addChild:_scoreNode];
+    
+    id wait = [SKAction waitForDuration:1];
+    id run = [SKAction runBlock:^{
+        [self decrementTimeRemaining];
+    }];
+    [self runAction:[SKAction repeatAction:[SKAction sequence:@[wait, run]] count:_timeRemaining]];
+    
+    
     
     [self loadNotesFromChord:_chordCatalog[arc4random_uniform((int)_chordCatalog.count - 1)]];
 }
 
--(void)monitorGame{
+-(void)killGame{
+    _screenIsGame = NO;
+    
+    [self enumerateChildNodesWithName:@"BassClef" usingBlock:^(SKNode *node, BOOL *stop){
+        [node removeFromParent];
+    }];
+    [self enumerateChildNodesWithName:@"TrebleClef" usingBlock:^(SKNode *node, BOOL *stop){
+        [node removeFromParent];
+    }];
+    [self enumerateChildNodesWithName:@"StaffLine" usingBlock:^(SKNode *node, BOOL *stop){
+        [node removeFromParent];
+    }];
+    [self enumerateChildNodesWithName:@"Note" usingBlock:^(SKNode *node, BOOL *stop){
+        [node removeFromParent];
+    }];
+    [self enumerateChildNodesWithName:@"NoteName" usingBlock:^(SKNode *node, BOOL *stop){
+        [node removeFromParent];
+    }];
+    [self enumerateChildNodesWithName:@"TimeRemaining" usingBlock:^(SKNode *node, BOOL *stop){
+        [node removeFromParent];
+    }];
+    [self enumerateChildNodesWithName:@"Score" usingBlock:^(SKNode *node, BOOL *stop){
+        [node removeFromParent];
+    }];
+}
+-(void)transtionGameToScore{
+    [self killGame];
     
 }
 
+-(void)decrementTimeRemaining{
+    _timeRemaining--;
+    _timeRemainingNode.text = [NSString stringWithFormat:@":%i",_timeRemaining];
+}
 -(void)removeGameNotes{
     [self enumerateChildNodesWithName:@"Note" usingBlock:^(SKNode *node, BOOL *stop){
         [node removeFromParent];
     }];
 }
 
--(void)loadStaffLineWithPosition:(CGPoint)position{
-    SKSpriteNode *staffLine = [SKSpriteNode spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"StaffLine" stringByAppendingString:_deviceSuffix]]];
-    staffLine.name = @"StaffLine";
-    staffLine.xScale = 0.5;
-    staffLine.yScale = 0.5;
-    staffLine.position = position;
-    [self addChild:staffLine];
+
+
+#pragma mark - Score
+
+-(void)loadScore{
     
 }
 
--(void)loadNotesFromChord:(Chord*)chord{
-    
-    NSArray *notes = chord.notes;
-    _currentNotes = notes;
-    
-    for (int i =0; i <notes.count; i++) {
-        Note *note = notes[i];
-        CGPoint position;
-        
-        if (note.staff == 0) {
-            position = CGPointMake(0.5*self.size.width, 0.5*note.position*self.size.height/(NUMBER_OF_STAFF_LINES + 1) + 0.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1));
-            //NSLog(@"%i",note.note);
-        }
-        else
-        {
-            position = CGPointMake(0.5*self.size.width, 0.5*(note.position + 16)*self.size.height/(NUMBER_OF_STAFF_LINES + 1) + 0.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1));
-            //NSLog(@"%i",note.note);
-        }
-     
-        SKSpriteNode *noteNode = [SKSpriteNode spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"Note" stringByAppendingString:_deviceSuffix]]];
-        noteNode.name = @"Note";
-        noteNode.xScale = 0.5;
-        noteNode.yScale = 0.5;
-        noteNode.position = position;
-        [self addChild:noteNode];
-    
-    }
-}
+
+
+#pragma mark - Chord Parsing
 
 -(void)buildChordCatalog{
     NSArray *chordArray;
@@ -1320,23 +1405,49 @@ static inline CGPoint rotatedPosition(CGPoint startPosition, float distance, flo
     
 }
 
-
-void midiInputCallback (const MIDIPacketList *list,
-                        void *procRef,
-                        void *srcRef)
-{
-    
-    
-    
-    [_gameScene addPacketListToFifo:list];
-    [MIDIUtility processMessage:list];
-    
-    
-    
-
+-(void)loadStaffLineWithPosition:(CGPoint)position{
+    SKSpriteNode *staffLine = [SKSpriteNode spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"StaffLine" stringByAppendingString:_deviceSuffix]]];
+    staffLine.name = @"StaffLine";
+    staffLine.xScale = 0.5;
+    staffLine.yScale = 0.5;
+    staffLine.position = position;
+    [self addChild:staffLine];
     
 }
 
+-(void)loadNotesFromChord:(Chord*)chord{
+    
+    NSArray *notes = chord.notes;
+    _currentNotes = notes;
+    _currentName = chord.name;
+    _currentNameNode.text = _currentName;
+    
+    
+    for (int i =0; i <notes.count; i++) {
+        Note *note = notes[i];
+        CGPoint position;
+        
+        if (note.staff == 0) {
+            position = CGPointMake(0.5*self.size.width, 0.5*note.position*self.size.height/(NUMBER_OF_STAFF_LINES + 1) + 0.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1));
+            //NSLog(@"%i",note.note);
+        }
+        else
+        {
+            position = CGPointMake(0.5*self.size.width, 0.5*(note.position + 16)*self.size.height/(NUMBER_OF_STAFF_LINES + 1) + 0.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1));
+            //NSLog(@"%i",note.note);
+        }
+        
+        SKSpriteNode *noteNode = [SKSpriteNode spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"Note" stringByAppendingString:_deviceSuffix]]];
+        noteNode.name = @"Note";
+        noteNode.xScale = 0.5;
+        noteNode.yScale = 0.5;
+        noteNode.position = position;
+        [self addChild:noteNode];
+        
+    }
+}
+
+#pragma mark - MIDI Handling
 -(void)addPacketListToFifo:(const MIDIPacketList*)list{
     
     [ _fifoMidiEvents addObject:[NSValue value:&list withObjCType:@encode(const MIDIPacketList*)]];
@@ -1356,7 +1467,7 @@ void midiInputCallback (const MIDIPacketList *list,
     else if(_screenIsHighRange) {
         _gameData.highRange = [MIDIUtility getNoteNumber:midiPacketList];
     }
-    //Check if note on or note off
+    //Check if note on or note off and call appropriate method
     else if (_screenIsGame) {
         if([MIDIUtility getMessageType:midiPacketList] == 0x90)
             [self checkNoteHitWithNumber:[MIDIUtility getNoteNumber:midiPacketList]];
@@ -1364,8 +1475,6 @@ void midiInputCallback (const MIDIPacketList *list,
             [self checkNoteReleaseWithNumber:[MIDIUtility getNoteNumber:midiPacketList]];
     }
 
-    
-    
     [_fifoMidiEvents removeObjectAtIndex:_fifoMidiEvents.count - 1];
     
 }
@@ -1397,12 +1506,11 @@ void midiInputCallback (const MIDIPacketList *list,
        
     }
 
-    
-    
-    
     if (correctPlay) {
         [self removeGameNotes];
         [self loadNotesFromChord:_chordCatalog[arc4random_uniform((int)_chordCatalog.count - 1)]];
+        _score = _score + 100;
+        _scoreNode.text = [NSString stringWithFormat:@"%i",_score];
     }
     
     
