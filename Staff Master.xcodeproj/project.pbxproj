@@ -7,8 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		177B1BF21A880AB800E9D769 /* MIDIPacketListObject.m in Sources */ = {isa = PBXBuildFile; fileRef = 177B1BF11A880AB800E9D769 /* MIDIPacketListObject.m */; };
-		177B1BF61A880B2C00E9D769 /* MIDIPacketObject.m in Sources */ = {isa = PBXBuildFile; fileRef = 177B1BF51A880B2C00E9D769 /* MIDIPacketObject.m */; };
 		824E9ECF1A7AC46D0037C0DD /* Note.m in Sources */ = {isa = PBXBuildFile; fileRef = 824E9ECE1A7AC46D0037C0DD /* Note.m */; };
 		824E9ED61A7BEF7D0037C0DD /* Chords0.plist in Resources */ = {isa = PBXBuildFile; fileRef = 824E9ED51A7BEF7D0037C0DD /* Chords0.plist */; };
 		824E9ED91A7ECEB90037C0DD /* Chord.m in Sources */ = {isa = PBXBuildFile; fileRef = 824E9ED81A7ECEB90037C0DD /* Chord.m */; };
@@ -38,10 +36,6 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		177B1BF01A880AB800E9D769 /* MIDIPacketListObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MIDIPacketListObject.h; sourceTree = "<group>"; };
-		177B1BF11A880AB800E9D769 /* MIDIPacketListObject.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MIDIPacketListObject.m; sourceTree = "<group>"; };
-		177B1BF41A880B2C00E9D769 /* MIDIPacketObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MIDIPacketObject.h; sourceTree = "<group>"; };
-		177B1BF51A880B2C00E9D769 /* MIDIPacketObject.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MIDIPacketObject.m; sourceTree = "<group>"; };
 		824E9ECD1A7AC46D0037C0DD /* Note.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Note.h; sourceTree = "<group>"; };
 		824E9ECE1A7AC46D0037C0DD /* Note.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Note.m; sourceTree = "<group>"; };
 		824E9ED51A7BEF7D0037C0DD /* Chords0.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Chords0.plist; sourceTree = "<group>"; };
@@ -96,12 +90,8 @@
 			children = (
 				82DFC5791A81E252000BB94C /* MIDIDevice.h */,
 				82DFC57A1A81E252000BB94C /* MIDIDevice.m */,
-				177B1BF01A880AB800E9D769 /* MIDIPacketListObject.h */,
-				177B1BF11A880AB800E9D769 /* MIDIPacketListObject.m */,
 				82DFC5731A81C54D000BB94C /* MIDIUtility.h */,
 				82DFC5741A81C54D000BB94C /* MIDIUtility.m */,
-				177B1BF41A880B2C00E9D769 /* MIDIPacketObject.h */,
-				177B1BF51A880B2C00E9D769 /* MIDIPacketObject.m */,
 			);
 			name = MIDI;
 			sourceTree = "<group>";
@@ -285,12 +275,10 @@
 				82E02B711A75585B00747A6E /* GameData.m in Sources */,
 				82E02B4F1A72B46600747A6E /* GameViewController.m in Sources */,
 				82E02B471A72B46600747A6E /* AppDelegate.m in Sources */,
-				177B1BF61A880B2C00E9D769 /* MIDIPacketObject.m in Sources */,
 				824E9ED91A7ECEB90037C0DD /* Chord.m in Sources */,
 				82E02B4A1A72B46600747A6E /* GameScene.m in Sources */,
 				82E02B441A72B46600747A6E /* main.m in Sources */,
 				82DFC5781A81C5A4000BB94C /* AudioUtility.m in Sources */,
-				177B1BF21A880AB800E9D769 /* MIDIPacketListObject.m in Sources */,
 				824E9ECF1A7AC46D0037C0DD /* Note.m in Sources */,
 				82DFC57B1A81E252000BB94C /* MIDIDevice.m in Sources */,
 				82DFC5751A81C54D000BB94C /* MIDIUtility.m in Sources */,

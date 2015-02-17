@@ -154,6 +154,18 @@ NSString *_currentName;
 int _timeRemaining;
 int _score;
 
+//Score
+bool _screenIsScore;
+
+bool _didPressRetryButton;
+bool _didReleaseRetryButton;
+bool _retryButtonIsPressed;
+
+bool _didPressReturnButton;
+bool _didReleaseReturnButton;
+bool _returnButtonIsPressed;
+
+
 static inline CGPoint rotatedPosition(CGPoint startPosition, float distance, float radians){
     
     float xPosition = startPosition.x + distance*cosf(radians + M_PI/2);
@@ -167,13 +179,8 @@ void midiInputCallback (const MIDIPacketList *list,
                         void *procRef,
                         void *srcRef)
 {
-    
-    
-    
-    [_gameScene addPacketListToFifo:list];
+    [_gameScene handlePacketList:list];
     [MIDIUtility processMessage:list];
-    
-    
 }
 
 -(void)didMoveToView:(SKView *)view {
@@ -192,7 +199,7 @@ void midiInputCallback (const MIDIPacketList *list,
     _screenIsLowRange = NO;
     _screenIsHighRange = NO;
     _screenIsGame = NO;
-    
+    _screenIsScore = NO;
     
     _gameData = [[GameData alloc]init];
     _device = [self device];
@@ -210,104 +217,129 @@ void midiInputCallback (const MIDIPacketList *list,
     SKNode *node = [self nodeAtPoint:location];
     
     //Menu
-    if ([node.name isEqualToString:@"PlayButton"]) {
-        _didPressPlay = YES;
-        
+    if (_screenIsMenu) {
+        if ([node.name isEqualToString:@"PlayButton"]) {
+            _didPressPlay = YES;
+            
+        }
+        else if ([node.name isEqualToString:@"MidiDeviceName"]) {
+            _didPressMidi = YES;
+            
+        }
     }
-    else if ([node.name isEqualToString:@"MidiDeviceName"]) {
-        _didPressMidi = YES;
-        
+    //Key
+    else if (_screenIsKey) {
+        if([node.name isEqualToString:@"CMajor"]){
+            _didPressCMajor = YES;
+        }
+        else if ([node.name isEqualToString:@"GMajor"]){
+            _didPressGMajor = YES;
+        }
+        else if ([node.name isEqualToString:@"DMajor"]){
+            _didPressDMajor = YES;
+        }
+        else if ([node.name isEqualToString:@"AMajor"]){
+            _didPressAMajor = YES;
+        }
+        else if ([node.name isEqualToString:@"EMajor"]){
+            _didPressEMajor = YES;
+        }
+        else if ([node.name isEqualToString:@"BMajor"]){
+            _didPressBMajor = YES;
+        }
+        else if ([node.name isEqualToString:@"CFlatMajor"]){
+            _didPressCFlatMajor = YES;
+        }
+        else if ([node.name isEqualToString:@"FSharpMajor"]){
+            _didPressFSharpMajor = YES;
+        }
+        else if ([node.name isEqualToString:@"GFlatMajor"]){
+            _didPressGFlatMajor = YES;
+        }
+        else if ([node.name isEqualToString:@"CSharpMajor"]){
+            _didPressCSharpMajor = YES;
+        }
+        else if ([node.name isEqualToString:@"DFlatMajor"]){
+            _didPressDFlatMajor = YES;
+        }
+        else if ([node.name isEqualToString:@"AFlatMajor"]){
+            _didPressAFlatMajor = YES;
+        }
+        else if ([node.name isEqualToString:@"EFlatMajor"]){
+            _didPressEFlatMajor = YES;
+        }
+        else if ([node.name isEqualToString:@"BFlatMajor"]){
+            _didPressBFlatMajor = YES;
+        }
+        else if ([node.name isEqualToString:@"GMajor"]){
+            _didPressGMajor = YES;
+        }
+        else if ([node.name isEqualToString:@"FMajor"]){
+            _didPressFMajor = YES;
+        }
     }
     
-    //Key
-    else if([node.name isEqualToString:@"CMajor"]){
-        _didPressCMajor = YES;
-    }
-    else if ([node.name isEqualToString:@"GMajor"]){
-        _didPressGMajor = YES;
-    }
-    else if ([node.name isEqualToString:@"DMajor"]){
-        _didPressDMajor = YES;
-    }
-    else if ([node.name isEqualToString:@"AMajor"]){
-        _didPressAMajor = YES;
-    }
-    else if ([node.name isEqualToString:@"EMajor"]){
-        _didPressEMajor = YES;
-    }
-    else if ([node.name isEqualToString:@"BMajor"]){
-        _didPressBMajor = YES;
-    }
-    else if ([node.name isEqualToString:@"CFlatMajor"]){
-        _didPressCFlatMajor = YES;
-    }
-    else if ([node.name isEqualToString:@"FSharpMajor"]){
-        _didPressFSharpMajor = YES;
-    }
-    else if ([node.name isEqualToString:@"GFlatMajor"]){
-        _didPressGFlatMajor = YES;
-    }
-    else if ([node.name isEqualToString:@"CSharpMajor"]){
-        _didPressCSharpMajor = YES;
-    }
-    else if ([node.name isEqualToString:@"DFlatMajor"]){
-        _didPressDFlatMajor = YES;
-    }
-    else if ([node.name isEqualToString:@"AFlatMajor"]){
-        _didPressAFlatMajor = YES;
-    }
-    else if ([node.name isEqualToString:@"EFlatMajor"]){
-        _didPressEFlatMajor = YES;
-    }
-    else if ([node.name isEqualToString:@"BFlatMajor"]){
-        _didPressBFlatMajor = YES;
-    }
-    else if ([node.name isEqualToString:@"GMajor"]){
-        _didPressGMajor = YES;
-    }
-    else if ([node.name isEqualToString:@"FMajor"]){
-        _didPressFMajor = YES;
-    }
+    
+    
     
     //Staff
-    else if ([node.name isEqualToString:@"TrebleStaff"]){
-        _didPressTrebleStaff = YES;
+    else if (_screenIsStaff) {
+        if ([node.name isEqualToString:@"TrebleStaff"]){
+            _didPressTrebleStaff = YES;
+        }
+        else if ([node.name isEqualToString:@"BassStaff"]){
+            _didPressBassStaff = YES;
+        }
+        else if ([node.name isEqualToString:@"GrandStaff"]){
+            _didPressGrandStaff = YES;
+        }
     }
-    else if ([node.name isEqualToString:@"BassStaff"]){
-        _didPressBassStaff = YES;
-    }
-    else if ([node.name isEqualToString:@"GrandStaff"]){
-        _didPressGrandStaff = YES;
-    }
+    
     
     //Notes
-    else if ([node.name isEqualToString:@"SingleNotes"]){
-        _didPressSingleNotes = YES;
+    else if (_screenIsNotes) {
+        if ([node.name isEqualToString:@"SingleNotes"]){
+            _didPressSingleNotes = YES;
+        }
+        else if ([node.name isEqualToString:@"MultipleNotes"]){
+            _didPressMultipleNotes = YES;
+        }
+        else if ([node.name isEqualToString:@"CombinationNotes"]){
+            _didPressCombinationNotes = YES;
+        }
     }
-    else if ([node.name isEqualToString:@"MultipleNotes"]){
-        _didPressMultipleNotes = YES;
-    }
-    else if ([node.name isEqualToString:@"CombinationNotes"]){
-        _didPressCombinationNotes = YES;
-    }
+    
     
     //Range ***FOR TESTING ONLY***
-    else if ([node.name isEqualToString:@"LowRange"]){
-        //C2
-        _gameData.lowRange = 60;
-        [self transitionLowRangeToHighRange];
-    }
-    else if ([node.name isEqualToString:@"HighRange"]){
-        //C4
-        _gameData.highRange = 108;
-        [self transitionHighRangeToGame];
+    else if (_screenIsLowRange || _screenIsHighRange) {
+        if ([node.name isEqualToString:@"LowRange"]){
+            //C2
+            _gameData.lowRange = 60;
+            [self transitionLowRangeToHighRange];
+        }
+        else if ([node.name isEqualToString:@"HighRange"]){
+            //C4
+            _gameData.highRange = 108;
+            [self transitionHighRangeToGame];
+        }
     }
     
+    //Game
     else if(_screenIsGame){
         [self  removeGameNotes];
         _score = _score + 100;
         _scoreNode.text = [NSString stringWithFormat:@"%i",_score];
         [self loadNotesFromChord:_chordCatalog[arc4random_uniform((int)_chordCatalog.count - 1)]];
+    }
+    
+    //Score
+    else if(_screenIsScore){
+        if ([node.name isEqualToString:@"RetryButton"]){
+            _didPressRetryButton = YES;
+        }
+        if ([node.name isEqualToString:@"ReturnButton"]){
+            _didPressReturnButton = YES;
+        }
     }
     
     
@@ -319,248 +351,348 @@ void midiInputCallback (const MIDIPacketList *list,
     CGPoint location = [touch locationInNode:self];
     SKNode *node = [self nodeAtPoint:location];
     
-    if ([node.name isEqualToString:@"PlayButton"]) {
-        if (_playIsPressed == YES) {
-            _didReleasePlay = YES;
+    //Menu
+    if (_screenIsMenu) {
+        if ([node.name isEqualToString:@"PlayButton"]) {
+            if (_playIsPressed == YES) {
+                _didReleasePlay = YES;
+            }
+            else{
+                _didReleaseNothing = YES;
+            }
         }
-        else{
-            _didReleaseNothing = YES;
-        }
-    }
-    else if ([node.name isEqualToString:@"MidiDeviceName"]) {
-        
-        if (_midiIsPressed == YES) {
-            _didReleaseMidi = YES;
-        }
-        else{
-            _didReleaseNothing = YES;
-        }
-    }
-    else if ([node.name isEqualToString:@"CMajor"]) {
-        
-        if (_cMajorIsPressed == YES) {
-            _didReleaseCMajor = YES;
-            _gameData.key = 0;
-        }
-        else{
-            _didReleaseNothing = YES;
-        }
-    }
-    else if ([node.name isEqualToString:@"GMajor"]) {
-        if (_gMajorIsPressed == YES) {
-            _didReleaseGMajor = YES;
-            _gameData.key = 1;
-        }
-        else{
-            _didReleaseNothing = YES;
-        }
-    }
-    else if ([node.name isEqualToString:@"DMajor"]) {
-        if (_dMajorIsPressed == YES) {
-            _didReleaseDMajor = YES;
-            _gameData.key = 2;
-        }
-        else{
-            _didReleaseNothing = YES;
-        }
-    }
-    else if ([node.name isEqualToString:@"AMajor"]) {
-        if (_aMajorIsPressed == YES) {
-            _didReleaseAMajor = YES;
-            _gameData.key = 3;
-        }
-        else{
-            _didReleaseNothing = YES;
-        }
-    }
-    else if ([node.name isEqualToString:@"EMajor"]) {
-        if (_eMajorIsPressed == YES) {
-            _didReleaseEMajor = YES;
-            _gameData.key = 4;
-        }
-        else{
-            _didReleaseNothing = YES;
-        }
-    }
-    else if ([node.name isEqualToString:@"BMajor"]) {
-        if (_bMajorIsPressed == YES) {
-            _didReleaseBMajor = YES;
-            _gameData.key = 5;
-        }
-        else{
-            _didReleaseNothing = YES;
-        }
-    }
-    else if ([node.name isEqualToString:@"CFlatMajor"]) {
-        if (_cFlatMajorIsPressed == YES) {
-            _didReleaseCFlatMajor = YES;
-            _gameData.key = -7;
+        else if ([node.name isEqualToString:@"MidiDeviceName"]) {
             
+            if (_midiIsPressed == YES) {
+                _didReleaseMidi = YES;
+            }
+            else{
+                _didReleaseNothing = YES;
+            }
         }
         else{
             _didReleaseNothing = YES;
         }
     }
-    else if ([node.name isEqualToString:@"FSharpMajor"]) {
-        if (_fSharpMajorIsPressed == YES) {
-            _didReleaseFSharpMajor = YES;
-            _gameData.key = 6;
+    
+    //Key
+    else if (_screenIsKey){
+        if ([node.name isEqualToString:@"CMajor"]) {
+            
+            if (_cMajorIsPressed == YES) {
+                _didReleaseCMajor = YES;
+                _gameData.key = 0;
+            }
+            else{
+                _didReleaseNothing = YES;
+            }
+        }
+        else if ([node.name isEqualToString:@"GMajor"]) {
+            if (_gMajorIsPressed == YES) {
+                _didReleaseGMajor = YES;
+                _gameData.key = 1;
+            }
+            else{
+                _didReleaseNothing = YES;
+            }
+        }
+        else if ([node.name isEqualToString:@"DMajor"]) {
+            if (_dMajorIsPressed == YES) {
+                _didReleaseDMajor = YES;
+                _gameData.key = 2;
+            }
+            else{
+                _didReleaseNothing = YES;
+            }
+        }
+        else if ([node.name isEqualToString:@"AMajor"]) {
+            if (_aMajorIsPressed == YES) {
+                _didReleaseAMajor = YES;
+                _gameData.key = 3;
+            }
+            else{
+                _didReleaseNothing = YES;
+            }
+        }
+        else if ([node.name isEqualToString:@"EMajor"]) {
+            if (_eMajorIsPressed == YES) {
+                _didReleaseEMajor = YES;
+                _gameData.key = 4;
+            }
+            else{
+                _didReleaseNothing = YES;
+            }
+        }
+        else if ([node.name isEqualToString:@"BMajor"]) {
+            if (_bMajorIsPressed == YES) {
+                _didReleaseBMajor = YES;
+                _gameData.key = 5;
+            }
+            else{
+                _didReleaseNothing = YES;
+            }
+        }
+        else if ([node.name isEqualToString:@"CFlatMajor"]) {
+            if (_cFlatMajorIsPressed == YES) {
+                _didReleaseCFlatMajor = YES;
+                _gameData.key = -7;
+                
+            }
+            else{
+                _didReleaseNothing = YES;
+            }
+        }
+        else if ([node.name isEqualToString:@"FSharpMajor"]) {
+            if (_fSharpMajorIsPressed == YES) {
+                _didReleaseFSharpMajor = YES;
+                _gameData.key = 6;
+            }
+            else{
+                _didReleaseNothing = YES;
+            }
+        }
+        else if ([node.name isEqualToString:@"GFlatMajor"]) {
+            if (_gFlatMajorIsPressed == YES) {
+                _didReleaseGFlatMajor = YES;
+                _gameData.key = -6;
+            }
+            else{
+                _didReleaseNothing = YES;
+            }
+        }
+        else if ([node.name isEqualToString:@"CSharpMajor"]) {
+            if (_cSharpMajorIsPressed == YES) {
+                _didReleaseCSharpMajor = YES;
+                _gameData.key = 7;
+            }
+            else{
+                _didReleaseNothing = YES;
+            }
+        }
+        else if ([node.name isEqualToString:@"DFlatMajor"]) {
+            if (_dFlatMajorIsPressed == YES) {
+                _didReleaseDFlatMajor = YES;
+                _gameData.key = -5;
+            }
+            else{
+                _didReleaseNothing = YES;
+            }
+        }
+        else if ([node.name isEqualToString:@"AFlatMajor"]) {
+            if (_aFlatMajorIsPressed == YES) {
+                _didReleaseAFlatMajor = YES;
+                _gameData.key = -4;
+            }
+            else{
+                _didReleaseNothing = YES;
+            }
+        }
+        else if ([node.name isEqualToString:@"EFlatMajor"]) {
+            if (_eFlatMajorIsPressed == YES) {
+                _didReleaseEFlatMajor = YES;
+                _gameData.key = -3;
+            }
+            else{
+                _didReleaseNothing = YES;
+            }
+        }
+        else if ([node.name isEqualToString:@"BFlatMajor"]) {
+            if (_bFlatMajorIsPressed == YES) {
+                _didReleaseBFlatMajor = YES;
+                _gameData.key = -2;
+            }
+            else{
+                _didReleaseNothing = YES;
+            }
+        }
+        else if ([node.name isEqualToString:@"FMajor"]) {
+            if (_fMajorIsPressed == YES) {
+                _didReleaseFMajor = YES;
+                _gameData.key = -1;
+            }
+            else{
+                _didReleaseNothing = YES;
+            }
         }
         else{
             _didReleaseNothing = YES;
         }
     }
-    else if ([node.name isEqualToString:@"GFlatMajor"]) {
-        if (_gFlatMajorIsPressed == YES) {
-            _didReleaseGFlatMajor = YES;
-            _gameData.key = -6;
+    
+    //Staff
+    else if (_screenIsStaff){
+        if ([node.name isEqualToString:@"TrebleStaff"]) {
+            if (_trebleStaffIsPressed == YES) {
+                _didReleaseTrebleStaff = YES;
+                _gameData.staff = 1;
+            }
+            else{
+                _didReleaseNothing = YES;
+            }
+        }
+        else if ([node.name isEqualToString:@"BassStaff"]) {
+            if (_bassStaffIsPressed == YES) {
+                _didReleaseBassStaff = YES;
+                _gameData.staff = 0;
+            }
+            else{
+                _didReleaseNothing = YES;
+            }
+        }
+        else if ([node.name isEqualToString:@"GrandStaff"]) {
+            if (_grandStaffIsPressed == YES) {
+                _didReleaseGrandStaff = YES;
+                _gameData.staff = 2;
+            }
+            else{
+                _didReleaseNothing = YES;
+            }
         }
         else{
             _didReleaseNothing = YES;
         }
     }
-    else if ([node.name isEqualToString:@"CSharpMajor"]) {
-        if (_cSharpMajorIsPressed == YES) {
-            _didReleaseCSharpMajor = YES;
-            _gameData.key = 7;
+    
+    //Notes
+    else if (_screenIsNotes){
+        if ([node.name isEqualToString:@"SingleNotes"]) {
+            if (_singleNotesIsPressed == YES) {
+                _didReleaseSingleNotes = YES;
+                _gameData.notes = 0;
+            }
+            else{
+                _didReleaseNothing = YES;
+            }
+        }
+        else if ([node.name isEqualToString:@"MultipleNotes"]) {
+            if (_multipleNotesIsPressed == YES) {
+                _didReleaseMultipleNotes = YES;
+                _gameData.notes = 1;
+            }
+            else{
+                _didReleaseNothing = YES;
+            }
+        }
+        else if ([node.name isEqualToString:@"CombinationNotes"]) {
+            if (_combinationNotesIsPressed == YES) {
+                _didReleaseCombinationNotes = YES;
+                _gameData.notes = 2;
+            }
+            else{
+                _didReleaseNothing = YES;
+            }
         }
         else{
             _didReleaseNothing = YES;
         }
     }
-    else if ([node.name isEqualToString:@"DFlatMajor"]) {
-        if (_dFlatMajorIsPressed == YES) {
-            _didReleaseDFlatMajor = YES;
-            _gameData.key = -5;
+    
+    //Score
+    else if (_screenIsScore){
+        if ([node.name isEqualToString:@"RetryButton"]) {
+            if (_retryButtonIsPressed == YES) {
+                _didReleaseRetryButton = YES;
+            }
+            else{
+                _didReleaseNothing = YES;
+            }
+        }
+        else if ([node.name isEqualToString:@"ReturnButton"]) {
+            if (_returnButtonIsPressed == YES) {
+                _didReleaseReturnButton = YES;
+            }
+            else{
+                _didReleaseNothing = YES;
+            }
         }
         else{
             _didReleaseNothing = YES;
         }
     }
-    else if ([node.name isEqualToString:@"AFlatMajor"]) {
-        if (_aFlatMajorIsPressed == YES) {
-            _didReleaseAFlatMajor = YES;
-            _gameData.key = -4;
-        }
-        else{
-            _didReleaseNothing = YES;
-        }
-    }
-    else if ([node.name isEqualToString:@"EFlatMajor"]) {
-        if (_eFlatMajorIsPressed == YES) {
-            _didReleaseEFlatMajor = YES;
-            _gameData.key = -3;
-        }
-        else{
-            _didReleaseNothing = YES;
-        }
-    }
-    else if ([node.name isEqualToString:@"BFlatMajor"]) {
-        if (_bFlatMajorIsPressed == YES) {
-            _didReleaseBFlatMajor = YES;
-            _gameData.key = -2;
-        }
-        else{
-            _didReleaseNothing = YES;
-        }
-    }
-    else if ([node.name isEqualToString:@"FMajor"]) {
-        if (_fMajorIsPressed == YES) {
-            _didReleaseFMajor = YES;
-            _gameData.key = -1;
-        }
-        else{
-            _didReleaseNothing = YES;
-        }
-    }
-    else if ([node.name isEqualToString:@"TrebleStaff"]) {
-        if (_trebleStaffIsPressed == YES) {
-            _didReleaseTrebleStaff = YES;
-            _gameData.staff = 1;
-        }
-        else{
-            _didReleaseNothing = YES;
-        }
-    }
-    else if ([node.name isEqualToString:@"BassStaff"]) {
-        if (_bassStaffIsPressed == YES) {
-            _didReleaseBassStaff = YES;
-            _gameData.staff = 0;
-        }
-        else{
-            _didReleaseNothing = YES;
-        }
-    }
-    else if ([node.name isEqualToString:@"GrandStaff"]) {
-        if (_grandStaffIsPressed == YES) {
-            _didReleaseGrandStaff = YES;
-            _gameData.staff = 2;
-        }
-        else{
-            _didReleaseNothing = YES;
-        }
-    }
-    else if ([node.name isEqualToString:@"SingleNotes"]) {
-        if (_singleNotesIsPressed == YES) {
-            _didReleaseSingleNotes = YES;
-            _gameData.notes = 0;
-        }
-        else{
-            _didReleaseNothing = YES;
-        }
-    }
-    else if ([node.name isEqualToString:@"MultipleNotes"]) {
-        if (_multipleNotesIsPressed == YES) {
-            _didReleaseMultipleNotes = YES;
-            _gameData.notes = 1;
-        }
-        else{
-            _didReleaseNothing = YES;
-        }
-    }
-    else if ([node.name isEqualToString:@"CombinationNotes"]) {
-        if (_combinationNotesIsPressed == YES) {
-            _didReleaseCombinationNotes = YES;
-            _gameData.notes = 2;
-        }
-        else{
-            _didReleaseNothing = YES;
-        }
-    }
+    
 
     
-    else{
-        _didReleaseNothing = YES;
+    
+    
+   
+    if (_playIsPressed) {
+        _playIsPressed = NO;
+    }
+    if (_midiIsPressed) {
+        _midiIsPressed = NO;
+    }
+    if (_cMajorIsPressed) {
+        _cMajorIsPressed = NO;
+    }
+    if (_gMajorIsPressed) {
+        _gMajorIsPressed = NO;
+    }
+    if (_dMajorIsPressed) {
+        _dMajorIsPressed = NO;
+    }
+    if (_aMajorIsPressed) {
+        _aMajorIsPressed = NO;
+    }
+    if (_eMajorIsPressed) {
+        _eMajorIsPressed = NO;
+    }
+    if (_bMajorIsPressed) {
+        _bMajorIsPressed = NO;
+    }
+    if (_cFlatMajorIsPressed) {
+        _cFlatMajorIsPressed = NO;
+    }
+    if (_fSharpMajorIsPressed) {
+        _fSharpMajorIsPressed = NO;
+    }
+    if (_gFlatMajorIsPressed) {
+        _gFlatMajorIsPressed = NO;
+    }
+    if (_cSharpMajorIsPressed) {
+        _cSharpMajorIsPressed = NO;
+    }
+    if (_dFlatMajorIsPressed) {
+        _dFlatMajorIsPressed = NO;
+    }
+    if (_aFlatMajorIsPressed) {
+        _aFlatMajorIsPressed = NO;
+    }
+    if (_eFlatMajorIsPressed) {
+        _eFlatMajorIsPressed = NO;
+    }
+    if (_bFlatMajorIsPressed) {
+        _bFlatMajorIsPressed = NO;
+    }
+    if (_fMajorIsPressed) {
+         _fMajorIsPressed = NO;
+    }
+    if (_trebleStaffIsPressed) {
+         _trebleStaffIsPressed = NO;
+    }
+    if (_bassStaffIsPressed) {
+        _bassStaffIsPressed = NO;
+    }
+    if (_grandStaffIsPressed) {
+        _grandStaffIsPressed = NO;
+    }
+    if (_singleNotesIsPressed) {
+        _singleNotesIsPressed = NO;
+    }
+    if (_multipleNotesIsPressed) {
+        _multipleNotesIsPressed = NO;
+    }
+    if (_combinationNotesIsPressed) {
+        _combinationNotesIsPressed = NO;
+    }
+    if (_retryButtonIsPressed) {
+        _retryButtonIsPressed = NO;
+    }
+    if (_returnButtonIsPressed) {
+        _returnButtonIsPressed = NO;
     }
     
-    //write code for --if not pressed already, dont worry about this
     
-    _playIsPressed = NO;
-    _midiIsPressed = NO;
     
-    _cMajorIsPressed = NO;
-    _gMajorIsPressed = NO;
-    _dMajorIsPressed = NO;
-    _aMajorIsPressed = NO;
-    _eMajorIsPressed = NO;
-    _bMajorIsPressed = NO;
-    _cFlatMajorIsPressed = NO;
-    _fSharpMajorIsPressed = NO;
-    _gFlatMajorIsPressed = NO;
-    _cSharpMajorIsPressed = NO;
-    _dFlatMajorIsPressed = NO;
-    _aFlatMajorIsPressed = NO;
-    _eFlatMajorIsPressed = NO;
-    _bFlatMajorIsPressed = NO;
-    _fMajorIsPressed = NO;
-    
-    _trebleStaffIsPressed = NO;
-    _bassStaffIsPressed = NO;
-    _grandStaffIsPressed = NO;
-    
-    _singleNotesIsPressed = NO;
-    _multipleNotesIsPressed = NO;
-    _combinationNotesIsPressed = NO;
     
     
 }
@@ -589,6 +721,16 @@ void midiInputCallback (const MIDIPacketList *list,
             }
             else if([caller isEqual: @"Notes"]){
                 [self transitionNotesToLowRange];
+            }
+            else if([caller isEqual: @"Score"]){
+                //transition logic*****
+                if ([name isEqual:@"RetryButton"]) {
+                    //transition1
+                }
+                else if ([name isEqual:@"ReturnButton"]) {
+                    //transition2
+                }
+                
             }
             else if([caller isEqual:@"Midi"]){
                 [self cycleMidiDevices];
@@ -716,7 +858,7 @@ void midiInputCallback (const MIDIPacketList *list,
     }
     else if (_screenIsStaff){
         [self monitorStaff];
-        if (_screenIsStaff) {
+        if (_didReleaseNothing == YES) {
             [self enumerateChildNodesWithName:@"TrebleStaff" usingBlock:^(SKNode *node, BOOL *stop){
                 ((SKSpriteNode*)node).alpha = 1.0;
             }];
@@ -731,7 +873,7 @@ void midiInputCallback (const MIDIPacketList *list,
     }
     else if (_screenIsNotes){
        [self monitorNotes];
-        if (_screenIsNotes) {
+        if (_didReleaseNothing == YES) {
             [self enumerateChildNodesWithName:@"SingleNotes" usingBlock:^(SKNode *node, BOOL *stop){
                 ((SKSpriteNode*)node).alpha = 1.0;
             }];
@@ -744,21 +886,27 @@ void midiInputCallback (const MIDIPacketList *list,
             _didReleaseNothing = NO;
         }
     }
-    else if (_screenIsLowRange || _screenIsHighRange){
-        if ((int)_fifoMidiEvents.count > 0) {
-            [self handlePacketList:_fifoMidiEvents[_fifoMidiEvents.count -1]];
-        }
-    }
+    
     else if (_screenIsGame) {
-        if ((int)_fifoMidiEvents.count > 0) {
-            [self handlePacketList:_fifoMidiEvents[_fifoMidiEvents.count -1]];
-        }
+        
         if (_timeRemaining == 0) {
             [self transtionGameToScore];
         }
         
     }
     
+    else if (_screenIsScore){
+        [self monitorScore];
+        if (_didReleaseNothing == YES) {
+            [self enumerateChildNodesWithName:@"RetryButton" usingBlock:^(SKNode *node, BOOL *stop){
+                ((SKSpriteNode*)node).alpha = 1.0;
+            }];
+            [self enumerateChildNodesWithName:@"ReturnButton" usingBlock:^(SKNode *node, BOOL *stop){
+                ((SKSpriteNode*)node).alpha = 1.0;
+            }];
+            _didReleaseNothing = NO;
+        }
+    }
     
 
     
@@ -864,6 +1012,12 @@ void midiInputCallback (const MIDIPacketList *list,
     }];
     
     [self enumerateChildNodesWithName:@"Title" usingBlock:^(SKNode *node, BOOL *stop){
+        [node removeFromParent];
+    }];
+    [self enumerateChildNodesWithName:@"Panel" usingBlock:^(SKNode *node, BOOL *stop){
+        [node removeFromParent];
+    }];
+    [self enumerateChildNodesWithName:@"MidiDeviceName" usingBlock:^(SKNode *node, BOOL *stop){
         [node removeFromParent];
     }];
     
@@ -1261,7 +1415,7 @@ void midiInputCallback (const MIDIPacketList *list,
     [self runAction:[SKAction repeatAction:[SKAction sequence:@[wait, run]] count:_timeRemaining]];
     
     
-    
+    //Generate random chord
     [self loadNotesFromChord:_chordCatalog[arc4random_uniform((int)_chordCatalog.count - 1)]];
 }
 
@@ -1292,7 +1446,7 @@ void midiInputCallback (const MIDIPacketList *list,
 }
 -(void)transtionGameToScore{
     [self killGame];
-    
+    [self loadScore];
 }
 
 -(void)decrementTimeRemaining{
@@ -1311,6 +1465,74 @@ void midiInputCallback (const MIDIPacketList *list,
 
 -(void)loadScore{
     
+    _screenIsScore = YES;
+    self.backgroundColor = [UIColor darkGrayColor];
+    
+    SKSpriteNode *gameOverNode = [SKSpriteNode spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"GameOver" stringByAppendingString:_deviceSuffix]]];
+    gameOverNode.name = @"GameOver";
+    gameOverNode.xScale = 0.5;
+    gameOverNode.yScale = 0.5;
+    gameOverNode.position = CGPointMake(0.5*self.size.width, 0.85*self.size.height);
+    [self addChild:gameOverNode];
+    
+    SKSpriteNode *scoreBannerNode = [SKSpriteNode spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"ScoreBanner" stringByAppendingString:_deviceSuffix]]];
+    scoreBannerNode.name = @"ScoreBanner";
+    scoreBannerNode.xScale = 0.5;
+    scoreBannerNode.yScale = 0.5;
+    scoreBannerNode.position = CGPointMake(0.5*self.size.width, 0.7*self.size.height);
+    [self addChild:scoreBannerNode];
+    
+    SKSpriteNode *bestBannerNode = [SKSpriteNode spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"BestBanner" stringByAppendingString:_deviceSuffix]]];
+    bestBannerNode.name = @"BestBanner";
+    bestBannerNode.xScale = 0.5;
+    bestBannerNode.yScale = 0.5;
+    bestBannerNode.position = CGPointMake(0.5*self.size.width, scoreBannerNode.position.y - 0.5*scoreBannerNode.size.height - 0.5*bestBannerNode.size.height);
+    [self addChild:bestBannerNode];
+    
+    
+    
+    SKSpriteNode *retryButtonNode = [SKSpriteNode spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"RetryButton" stringByAppendingString:_deviceSuffix]]];
+    retryButtonNode.name = @"RetryButton";
+    retryButtonNode.xScale = 0.5;
+    retryButtonNode.yScale = 0.5;
+    int buttonSectionHeight = (bestBannerNode.position.y - 0.5*bestBannerNode.size.height);
+    int spaceBetweenButtons = (buttonSectionHeight - 2*retryButtonNode.size.height)/3;
+    retryButtonNode.position = CGPointMake(0.5*self.size.width, 0.5*buttonSectionHeight + 0.5*spaceBetweenButtons + 0.5*retryButtonNode.size.height);
+    [self addChild:retryButtonNode];
+    
+    SKSpriteNode *returnButtonNode = [SKSpriteNode spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"ReturnButton" stringByAppendingString:_deviceSuffix]]];
+    returnButtonNode.name = @"ReturnButton";
+    returnButtonNode.xScale = 0.5;
+    returnButtonNode.yScale = 0.5;
+    returnButtonNode.position = CGPointMake(0.5*self.size.width, spaceBetweenButtons + 0.5*returnButtonNode.size.height);
+    [self addChild:returnButtonNode];
+    
+    
+}
+
+
+-(void)monitorScore{
+    [self setButtonFlagsFromCaller:@"Score" andName:@"RetryButton" andDidPress:&_didPressRetryButton andDidRelease:&_didReleaseRetryButton andIsPressed:&_retryButtonIsPressed ];
+    [self setButtonFlagsFromCaller:@"Score" andName:@"ReturnButton" andDidPress:&_didPressReturnButton andDidRelease:&_didReleaseReturnButton andIsPressed:&_returnButtonIsPressed ];
+    
+}
+
+-(void)killScore{
+    [self enumerateChildNodesWithName:@"GameOver" usingBlock:^(SKNode *node, BOOL *stop){
+        [node removeFromParent];
+    }];
+    [self enumerateChildNodesWithName:@"ScoreBanner" usingBlock:^(SKNode *node, BOOL *stop){
+        [node removeFromParent];
+    }];
+    [self enumerateChildNodesWithName:@"BestBanner" usingBlock:^(SKNode *node, BOOL *stop){
+        [node removeFromParent];
+    }];
+    [self enumerateChildNodesWithName:@"RetryButton" usingBlock:^(SKNode *node, BOOL *stop){
+        [node removeFromParent];
+    }];
+    [self enumerateChildNodesWithName:@"ReturnButton" usingBlock:^(SKNode *node, BOOL *stop){
+        [node removeFromParent];
+    }];
 }
 
 
@@ -1448,24 +1670,25 @@ void midiInputCallback (const MIDIPacketList *list,
 }
 
 #pragma mark - MIDI Handling
--(void)addPacketListToFifo:(const MIDIPacketList*)list{
-    
-    [ _fifoMidiEvents addObject:[NSValue value:&list withObjCType:@encode(const MIDIPacketList*)]];
-}
 
--(void)handlePacketList:(NSValue*)packetList{
+-(void)handlePacketList:(const MIDIPacketList*)midiPacketList{
     
-    //Reconstruct MIDIPacketList from NSValue
-    MIDIPacketList *midiPacketList;
-    [packetList getValue:&midiPacketList];
+    
     
     //Set the Lowest Note the game will display
     if (_screenIsLowRange) {
-        _gameData.lowRange = [MIDIUtility getNoteNumber:midiPacketList];
+        if([MIDIUtility getMessageType:midiPacketList] == 0x90)
+        {
+            _gameData.lowRange = [MIDIUtility getNoteNumber:midiPacketList];
+            [self transitionLowRangeToHighRange];
+        }
     }
     //Set the Highest Note the game will display
     else if(_screenIsHighRange) {
-        _gameData.highRange = [MIDIUtility getNoteNumber:midiPacketList];
+        if([MIDIUtility getMessageType:midiPacketList] == 0x90){
+            _gameData.highRange = [MIDIUtility getNoteNumber:midiPacketList];
+            [self transitionHighRangeToGame];
+        }
     }
     //Check if note on or note off and call appropriate method
     else if (_screenIsGame) {
@@ -1474,8 +1697,6 @@ void midiInputCallback (const MIDIPacketList *list,
         else if ([MIDIUtility getMessageType:midiPacketList] == 0x80)
             [self checkNoteReleaseWithNumber:[MIDIUtility getNoteNumber:midiPacketList]];
     }
-
-    [_fifoMidiEvents removeObjectAtIndex:_fifoMidiEvents.count - 1];
     
 }
 
@@ -1520,13 +1741,7 @@ void midiInputCallback (const MIDIPacketList *list,
 -(void)checkNoteReleaseWithNumber:(int)userKeyNumber
 {
     
-    if (_notePressedFlags.count > 0) {
-        for (int i = 0; i < (int)_notePressedFlags.count; i++) {
-            if ([_notePressedFlags[i] intValue] == userKeyNumber) {
-                [_notePressedFlags removeObjectAtIndex:i];
-            }
-        }
-    }
+    [_notePressedFlags removeObjectIdenticalTo:[NSNumber numberWithInt:userKeyNumber]];
     
 }
 
