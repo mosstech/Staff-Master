@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		820F3AA81A92F0440019026D /* SpriteButton.m in Sources */ = {isa = PBXBuildFile; fileRef = 820F3AA71A92F0440019026D /* SpriteButton.m */; };
 		824E9ECF1A7AC46D0037C0DD /* Note.m in Sources */ = {isa = PBXBuildFile; fileRef = 824E9ECE1A7AC46D0037C0DD /* Note.m */; };
 		824E9ED61A7BEF7D0037C0DD /* Chords0.plist in Resources */ = {isa = PBXBuildFile; fileRef = 824E9ED51A7BEF7D0037C0DD /* Chords0.plist */; };
 		824E9ED91A7ECEB90037C0DD /* Chord.m in Sources */ = {isa = PBXBuildFile; fileRef = 824E9ED81A7ECEB90037C0DD /* Chord.m */; };
@@ -36,6 +37,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		820F3AA61A92F0440019026D /* SpriteButton.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SpriteButton.h; sourceTree = "<group>"; };
+		820F3AA71A92F0440019026D /* SpriteButton.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SpriteButton.m; sourceTree = "<group>"; };
 		824E9ECD1A7AC46D0037C0DD /* Note.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Note.h; sourceTree = "<group>"; };
 		824E9ECE1A7AC46D0037C0DD /* Note.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Note.m; sourceTree = "<group>"; };
 		824E9ED51A7BEF7D0037C0DD /* Chords0.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Chords0.plist; sourceTree = "<group>"; };
@@ -85,15 +88,47 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		177B1BF31A880AD600E9D769 /* MIDI */ = {
+		820F3AA51A92F00C0019026D /* Utilities */ = {
 			isa = PBXGroup;
 			children = (
-				82DFC5791A81E252000BB94C /* MIDIDevice.h */,
-				82DFC57A1A81E252000BB94C /* MIDIDevice.m */,
 				82DFC5731A81C54D000BB94C /* MIDIUtility.h */,
 				82DFC5741A81C54D000BB94C /* MIDIUtility.m */,
+				82DFC5761A81C5A4000BB94C /* AudioUtility.h */,
+				82DFC5771A81C5A4000BB94C /* AudioUtility.m */,
 			);
-			name = MIDI;
+			name = Utilities;
+			sourceTree = "<group>";
+		};
+		820F3AA91A96FB050019026D /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				824E9ED51A7BEF7D0037C0DD /* Chords0.plist */,
+			);
+			name = Resources;
+			sourceTree = "<group>";
+		};
+		820F3AAA1A96FB420019026D /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				824E9ECD1A7AC46D0037C0DD /* Note.h */,
+				824E9ECE1A7AC46D0037C0DD /* Note.m */,
+				824E9ED71A7ECEB90037C0DD /* Chord.h */,
+				824E9ED81A7ECEB90037C0DD /* Chord.m */,
+				82DFC5791A81E252000BB94C /* MIDIDevice.h */,
+				82DFC57A1A81E252000BB94C /* MIDIDevice.m */,
+			);
+			name = Models;
+			sourceTree = "<group>";
+		};
+		820F3AAB1A96FB600019026D /* Controllers */ = {
+			isa = PBXGroup;
+			children = (
+				82E02B4D1A72B46600747A6E /* GameViewController.h */,
+				82E02B4E1A72B46600747A6E /* GameViewController.m */,
+				820F3AA61A92F0440019026D /* SpriteButton.h */,
+				820F3AA71A92F0440019026D /* SpriteButton.m */,
+			);
+			name = Controllers;
 			sourceTree = "<group>";
 		};
 		82E02B351A72B46600747A6E = {
@@ -117,27 +152,21 @@
 		82E02B401A72B46600747A6E /* Staff Master */ = {
 			isa = PBXGroup;
 			children = (
-				177B1BF31A880AD600E9D769 /* MIDI */,
-				82DFC5761A81C5A4000BB94C /* AudioUtility.h */,
-				82DFC5771A81C5A4000BB94C /* AudioUtility.m */,
 				82E02B451A72B46600747A6E /* AppDelegate.h */,
 				82E02B461A72B46600747A6E /* AppDelegate.m */,
 				82E02B481A72B46600747A6E /* GameScene.h */,
 				82E02B491A72B46600747A6E /* GameScene.m */,
+				82E02B6F1A75585B00747A6E /* GameData.h */,
+				82E02B701A75585B00747A6E /* GameData.m */,
 				82E02B4B1A72B46600747A6E /* GameScene.sks */,
-				82E02B4D1A72B46600747A6E /* GameViewController.h */,
-				82E02B4E1A72B46600747A6E /* GameViewController.m */,
+				820F3AAB1A96FB600019026D /* Controllers */,
+				820F3AAA1A96FB420019026D /* Models */,
+				820F3AA91A96FB050019026D /* Resources */,
+				820F3AA51A92F00C0019026D /* Utilities */,
 				82E02B501A72B46600747A6E /* Main.storyboard */,
 				82E02B531A72B46600747A6E /* Images.xcassets */,
 				82E02B551A72B46600747A6E /* LaunchScreen.xib */,
 				82E02B411A72B46600747A6E /* Supporting Files */,
-				82E02B6F1A75585B00747A6E /* GameData.h */,
-				82E02B701A75585B00747A6E /* GameData.m */,
-				824E9ECD1A7AC46D0037C0DD /* Note.h */,
-				824E9ECE1A7AC46D0037C0DD /* Note.m */,
-				824E9ED51A7BEF7D0037C0DD /* Chords0.plist */,
-				824E9ED71A7ECEB90037C0DD /* Chord.h */,
-				824E9ED81A7ECEB90037C0DD /* Chord.m */,
 			);
 			path = "Staff Master";
 			sourceTree = "<group>";
@@ -280,6 +309,7 @@
 				82E02B441A72B46600747A6E /* main.m in Sources */,
 				82DFC5781A81C5A4000BB94C /* AudioUtility.m in Sources */,
 				824E9ECF1A7AC46D0037C0DD /* Note.m in Sources */,
+				820F3AA81A92F0440019026D /* SpriteButton.m in Sources */,
 				82DFC57B1A81E252000BB94C /* MIDIDevice.m in Sources */,
 				82DFC5751A81C54D000BB94C /* MIDIUtility.m in Sources */,
 			);

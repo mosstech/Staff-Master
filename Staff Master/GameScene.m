@@ -12,6 +12,7 @@
 #import "Note.h"
 #import "AudioUtility.h"
 #import "MIDIUtility.h"
+#import "SpriteButton.h"
 
 @implementation GameScene
 
@@ -25,145 +26,44 @@ GameData *_gameData;
 NSArray *_chordCatalog;
 AudioController *audioController;
 
+enum currentScreen {kNothing = 0,
+                    kMenu = 1,
+                    kKey = 2,
+                    kStaff = 3,
+                    kNotes = 4,
+                    kLowRange = 5,
+                    kHighRange = 6,
+                    kGame = 7,
+                    kScore = 8};
 
-//Menu
-bool _screenIsMenu;
+SKNode *_menuScreenNode;
+SKNode *_keyScreenNode;
+SKNode *_staffScreenNode;
+SKNode *_notesScreenNode;
+SKNode *_lowRangeScreenNode;
+SKNode *_highRangeScreenNode;
+SKNode *_gameScreenNode;
+SKNode *_scoreScreenNode;
 
-bool _didPressPlay;
-bool _didReleasePlay;
-bool _playIsPressed;
-
-bool _didPressMidi;
-bool _didReleaseMidi;
-bool _midiIsPressed;
+enum currentScreen _currentScreen;
 
 int _midiDeviceIndex;
 SKLabelNode *_midiDeviceName;
 
-//Key
-bool _screenIsKey;
-
-bool _didPressCMajor;
-bool _didReleaseCMajor;
-bool _cMajorIsPressed;
-
-bool _didPressGMajor;
-bool _didReleaseGMajor;
-bool _gMajorIsPressed;
-
-bool _didPressDMajor;
-bool _didReleaseDMajor;
-bool _dMajorIsPressed;
-
-bool _didPressAMajor;
-bool _didReleaseAMajor;
-bool _aMajorIsPressed;
-
-bool _didPressEMajor;
-bool _didReleaseEMajor;
-bool _eMajorIsPressed;
-
-bool _didPressBMajor;
-bool _didReleaseBMajor;
-bool _bMajorIsPressed;
-
-bool _didPressCFlatMajor;
-bool _didReleaseCFlatMajor;
-bool _cFlatMajorIsPressed;
-
-bool _didPressFSharpMajor;
-bool _didReleaseFSharpMajor;
-bool _fSharpMajorIsPressed;
-
-bool _didPressGFlatMajor;
-bool _didReleaseGFlatMajor;
-bool _gFlatMajorIsPressed;
-
-bool _didPressCSharpMajor;
-bool _didReleaseCSharpMajor;
-bool _cSharpMajorIsPressed;
-
-bool _didPressDFlatMajor;
-bool _didReleaseDFlatMajor;
-bool _dFlatMajorIsPressed;
-
-bool _didPressAFlatMajor;
-bool _didReleaseAFlatMajor;
-bool _aFlatMajorIsPressed;
-
-bool _didPressEFlatMajor;
-bool _didReleaseEFlatMajor;
-bool _eFlatMajorIsPressed;
-
-bool _didPressBFlatMajor;
-bool _didReleaseBFlatMajor;
-bool _bFlatMajorIsPressed;
-
-bool _didPressFMajor;
-bool _didReleaseFMajor;
-bool _fMajorIsPressed;
-
-//Staff
-bool _screenIsStaff;
-
-bool _didPressTrebleStaff;
-bool _didReleaseTrebleStaff;
-bool _trebleStaffIsPressed;
-
-bool _didPressBassStaff;
-bool _didReleaseBassStaff;
-bool _bassStaffIsPressed;
-
-bool _didPressGrandStaff;
-bool _didReleaseGrandStaff;
-bool _grandStaffIsPressed;
-
-//Notes
-bool _screenIsNotes;
-
-bool _didPressSingleNotes;
-bool _didReleaseSingleNotes;
-bool _singleNotesIsPressed;
-
-bool _didPressMultipleNotes;
-bool _didReleaseMultipleNotes;
-bool _multipleNotesIsPressed;
-
-bool _didPressCombinationNotes;
-bool _didReleaseCombinationNotes;
-bool _combinationNotesIsPressed;
-
-bool _didReleaseNothing;
-
-//Range
-bool _screenIsLowRange;
-bool _screenIsHighRange;
-
 //Game
 NSMutableArray *_notePressedFlags;
 NSMutableArray *_fifoMidiEvents;
+NSArray *_currentNotes;
 
 SKLabelNode *_currentNameNode;
 SKLabelNode *_timeRemainingNode;
 SKLabelNode *_scoreNode;
 
-bool _screenIsGame;
-
-NSArray *_currentNotes;
 NSString *_currentName;
 int _timeRemaining;
 int _score;
 
-//Score
-bool _screenIsScore;
 
-bool _didPressRetryButton;
-bool _didReleaseRetryButton;
-bool _retryButtonIsPressed;
-
-bool _didPressReturnButton;
-bool _didReleaseReturnButton;
-bool _returnButtonIsPressed;
 
 
 static inline CGPoint rotatedPosition(CGPoint startPosition, float distance, float radians){
@@ -184,22 +84,11 @@ void midiInputCallback (const MIDIPacketList *list,
 }
 
 -(void)didMoveToView:(SKView *)view {
-    /* Setup your scene here */
    
+    _currentScreen = kNothing;
     
     _gameScene = self;
     audioController = [[AudioController alloc] init];
-    
-    
-    
-    _screenIsMenu = NO;
-    _screenIsKey = NO;
-    _screenIsStaff = NO;
-    _screenIsNotes = NO;
-    _screenIsLowRange = NO;
-    _screenIsHighRange = NO;
-    _screenIsGame = NO;
-    _screenIsScore = NO;
     
     _gameData = [[GameData alloc]init];
     _device = [self device];
@@ -210,542 +99,20 @@ void midiInputCallback (const MIDIPacketList *list,
     
 }
 
--(void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
-   
-    UITouch *touch = [touches anyObject];
-    CGPoint location = [touch locationInNode:self];
-    SKNode *node = [self nodeAtPoint:location];
-    
-    //Menu
-    if (_screenIsMenu) {
-        if ([node.name isEqualToString:@"PlayButton"]) {
-            _didPressPlay = YES;
-            
-        }
-        else if ([node.name isEqualToString:@"MidiDeviceName"]) {
-            _didPressMidi = YES;
-            
-        }
-    }
-    //Key
-    else if (_screenIsKey) {
-        if([node.name isEqualToString:@"CMajor"]){
-            _didPressCMajor = YES;
-        }
-        else if ([node.name isEqualToString:@"GMajor"]){
-            _didPressGMajor = YES;
-        }
-        else if ([node.name isEqualToString:@"DMajor"]){
-            _didPressDMajor = YES;
-        }
-        else if ([node.name isEqualToString:@"AMajor"]){
-            _didPressAMajor = YES;
-        }
-        else if ([node.name isEqualToString:@"EMajor"]){
-            _didPressEMajor = YES;
-        }
-        else if ([node.name isEqualToString:@"BMajor"]){
-            _didPressBMajor = YES;
-        }
-        else if ([node.name isEqualToString:@"CFlatMajor"]){
-            _didPressCFlatMajor = YES;
-        }
-        else if ([node.name isEqualToString:@"FSharpMajor"]){
-            _didPressFSharpMajor = YES;
-        }
-        else if ([node.name isEqualToString:@"GFlatMajor"]){
-            _didPressGFlatMajor = YES;
-        }
-        else if ([node.name isEqualToString:@"CSharpMajor"]){
-            _didPressCSharpMajor = YES;
-        }
-        else if ([node.name isEqualToString:@"DFlatMajor"]){
-            _didPressDFlatMajor = YES;
-        }
-        else if ([node.name isEqualToString:@"AFlatMajor"]){
-            _didPressAFlatMajor = YES;
-        }
-        else if ([node.name isEqualToString:@"EFlatMajor"]){
-            _didPressEFlatMajor = YES;
-        }
-        else if ([node.name isEqualToString:@"BFlatMajor"]){
-            _didPressBFlatMajor = YES;
-        }
-        else if ([node.name isEqualToString:@"GMajor"]){
-            _didPressGMajor = YES;
-        }
-        else if ([node.name isEqualToString:@"FMajor"]){
-            _didPressFMajor = YES;
-        }
-    }
-    
-    
-    
-    
-    //Staff
-    else if (_screenIsStaff) {
-        if ([node.name isEqualToString:@"TrebleStaff"]){
-            _didPressTrebleStaff = YES;
-        }
-        else if ([node.name isEqualToString:@"BassStaff"]){
-            _didPressBassStaff = YES;
-        }
-        else if ([node.name isEqualToString:@"GrandStaff"]){
-            _didPressGrandStaff = YES;
-        }
-    }
-    
-    
-    //Notes
-    else if (_screenIsNotes) {
-        if ([node.name isEqualToString:@"SingleNotes"]){
-            _didPressSingleNotes = YES;
-        }
-        else if ([node.name isEqualToString:@"MultipleNotes"]){
-            _didPressMultipleNotes = YES;
-        }
-        else if ([node.name isEqualToString:@"CombinationNotes"]){
-            _didPressCombinationNotes = YES;
-        }
-    }
-    
-    
-    //Range ***FOR TESTING ONLY***
-    else if (_screenIsLowRange || _screenIsHighRange) {
-        if ([node.name isEqualToString:@"LowRange"]){
-            //C2
-            _gameData.lowRange = 60;
-            [self transitionLowRangeToHighRange];
-        }
-        else if ([node.name isEqualToString:@"HighRange"]){
-            //C4
-            _gameData.highRange = 108;
-            [self transitionHighRangeToGame];
-        }
-    }
-    
-    //Game
-    else if(_screenIsGame){
-        [self  removeGameNotes];
-        _score = _score + 100;
-        _scoreNode.text = [NSString stringWithFormat:@"%i",_score];
-        [self loadNotesFromChord:_chordCatalog[arc4random_uniform((int)_chordCatalog.count - 1)]];
-    }
-    
-    //Score
-    else if(_screenIsScore){
-        if ([node.name isEqualToString:@"RetryButton"]){
-            _didPressRetryButton = YES;
-        }
-        if ([node.name isEqualToString:@"ReturnButton"]){
-            _didPressReturnButton = YES;
-        }
-    }
-    
-    
-}
-
 -(void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event{
     
     UITouch *touch = [touches anyObject];
     CGPoint location = [touch locationInNode:self];
     SKNode *node = [self nodeAtPoint:location];
-    
-    //Menu
-    if (_screenIsMenu) {
-        if ([node.name isEqualToString:@"PlayButton"]) {
-            if (_playIsPressed == YES) {
-                _didReleasePlay = YES;
-            }
-            else{
-                _didReleaseNothing = YES;
-            }
-        }
-        else if ([node.name isEqualToString:@"MidiDeviceName"]) {
-            
-            if (_midiIsPressed == YES) {
-                _didReleaseMidi = YES;
-            }
-            else{
-                _didReleaseNothing = YES;
-            }
-        }
-        else{
-            _didReleaseNothing = YES;
-        }
-    }
-    
-    //Key
-    else if (_screenIsKey){
-        if ([node.name isEqualToString:@"CMajor"]) {
-            
-            if (_cMajorIsPressed == YES) {
-                _didReleaseCMajor = YES;
-                _gameData.key = 0;
-            }
-            else{
-                _didReleaseNothing = YES;
-            }
-        }
-        else if ([node.name isEqualToString:@"GMajor"]) {
-            if (_gMajorIsPressed == YES) {
-                _didReleaseGMajor = YES;
-                _gameData.key = 1;
-            }
-            else{
-                _didReleaseNothing = YES;
-            }
-        }
-        else if ([node.name isEqualToString:@"DMajor"]) {
-            if (_dMajorIsPressed == YES) {
-                _didReleaseDMajor = YES;
-                _gameData.key = 2;
-            }
-            else{
-                _didReleaseNothing = YES;
-            }
-        }
-        else if ([node.name isEqualToString:@"AMajor"]) {
-            if (_aMajorIsPressed == YES) {
-                _didReleaseAMajor = YES;
-                _gameData.key = 3;
-            }
-            else{
-                _didReleaseNothing = YES;
-            }
-        }
-        else if ([node.name isEqualToString:@"EMajor"]) {
-            if (_eMajorIsPressed == YES) {
-                _didReleaseEMajor = YES;
-                _gameData.key = 4;
-            }
-            else{
-                _didReleaseNothing = YES;
-            }
-        }
-        else if ([node.name isEqualToString:@"BMajor"]) {
-            if (_bMajorIsPressed == YES) {
-                _didReleaseBMajor = YES;
-                _gameData.key = 5;
-            }
-            else{
-                _didReleaseNothing = YES;
-            }
-        }
-        else if ([node.name isEqualToString:@"CFlatMajor"]) {
-            if (_cFlatMajorIsPressed == YES) {
-                _didReleaseCFlatMajor = YES;
-                _gameData.key = -7;
-                
-            }
-            else{
-                _didReleaseNothing = YES;
-            }
-        }
-        else if ([node.name isEqualToString:@"FSharpMajor"]) {
-            if (_fSharpMajorIsPressed == YES) {
-                _didReleaseFSharpMajor = YES;
-                _gameData.key = 6;
-            }
-            else{
-                _didReleaseNothing = YES;
-            }
-        }
-        else if ([node.name isEqualToString:@"GFlatMajor"]) {
-            if (_gFlatMajorIsPressed == YES) {
-                _didReleaseGFlatMajor = YES;
-                _gameData.key = -6;
-            }
-            else{
-                _didReleaseNothing = YES;
-            }
-        }
-        else if ([node.name isEqualToString:@"CSharpMajor"]) {
-            if (_cSharpMajorIsPressed == YES) {
-                _didReleaseCSharpMajor = YES;
-                _gameData.key = 7;
-            }
-            else{
-                _didReleaseNothing = YES;
-            }
-        }
-        else if ([node.name isEqualToString:@"DFlatMajor"]) {
-            if (_dFlatMajorIsPressed == YES) {
-                _didReleaseDFlatMajor = YES;
-                _gameData.key = -5;
-            }
-            else{
-                _didReleaseNothing = YES;
-            }
-        }
-        else if ([node.name isEqualToString:@"AFlatMajor"]) {
-            if (_aFlatMajorIsPressed == YES) {
-                _didReleaseAFlatMajor = YES;
-                _gameData.key = -4;
-            }
-            else{
-                _didReleaseNothing = YES;
-            }
-        }
-        else if ([node.name isEqualToString:@"EFlatMajor"]) {
-            if (_eFlatMajorIsPressed == YES) {
-                _didReleaseEFlatMajor = YES;
-                _gameData.key = -3;
-            }
-            else{
-                _didReleaseNothing = YES;
-            }
-        }
-        else if ([node.name isEqualToString:@"BFlatMajor"]) {
-            if (_bFlatMajorIsPressed == YES) {
-                _didReleaseBFlatMajor = YES;
-                _gameData.key = -2;
-            }
-            else{
-                _didReleaseNothing = YES;
-            }
-        }
-        else if ([node.name isEqualToString:@"FMajor"]) {
-            if (_fMajorIsPressed == YES) {
-                _didReleaseFMajor = YES;
-                _gameData.key = -1;
-            }
-            else{
-                _didReleaseNothing = YES;
-            }
-        }
-        else{
-            _didReleaseNothing = YES;
-        }
-    }
-    
-    //Staff
-    else if (_screenIsStaff){
-        if ([node.name isEqualToString:@"TrebleStaff"]) {
-            if (_trebleStaffIsPressed == YES) {
-                _didReleaseTrebleStaff = YES;
-                _gameData.staff = 1;
-            }
-            else{
-                _didReleaseNothing = YES;
-            }
-        }
-        else if ([node.name isEqualToString:@"BassStaff"]) {
-            if (_bassStaffIsPressed == YES) {
-                _didReleaseBassStaff = YES;
-                _gameData.staff = 0;
-            }
-            else{
-                _didReleaseNothing = YES;
-            }
-        }
-        else if ([node.name isEqualToString:@"GrandStaff"]) {
-            if (_grandStaffIsPressed == YES) {
-                _didReleaseGrandStaff = YES;
-                _gameData.staff = 2;
-            }
-            else{
-                _didReleaseNothing = YES;
-            }
-        }
-        else{
-            _didReleaseNothing = YES;
-        }
-    }
-    
-    //Notes
-    else if (_screenIsNotes){
-        if ([node.name isEqualToString:@"SingleNotes"]) {
-            if (_singleNotesIsPressed == YES) {
-                _didReleaseSingleNotes = YES;
-                _gameData.notes = 0;
-            }
-            else{
-                _didReleaseNothing = YES;
-            }
-        }
-        else if ([node.name isEqualToString:@"MultipleNotes"]) {
-            if (_multipleNotesIsPressed == YES) {
-                _didReleaseMultipleNotes = YES;
-                _gameData.notes = 1;
-            }
-            else{
-                _didReleaseNothing = YES;
-            }
-        }
-        else if ([node.name isEqualToString:@"CombinationNotes"]) {
-            if (_combinationNotesIsPressed == YES) {
-                _didReleaseCombinationNotes = YES;
-                _gameData.notes = 2;
-            }
-            else{
-                _didReleaseNothing = YES;
-            }
-        }
-        else{
-            _didReleaseNothing = YES;
-        }
-    }
-    
-    //Score
-    else if (_screenIsScore){
-        if ([node.name isEqualToString:@"RetryButton"]) {
-            if (_retryButtonIsPressed == YES) {
-                _didReleaseRetryButton = YES;
-            }
-            else{
-                _didReleaseNothing = YES;
-            }
-        }
-        else if ([node.name isEqualToString:@"ReturnButton"]) {
-            if (_returnButtonIsPressed == YES) {
-                _didReleaseReturnButton = YES;
-            }
-            else{
-                _didReleaseNothing = YES;
-            }
-        }
-        else{
-            _didReleaseNothing = YES;
-        }
-    }
-    
 
-    
-    
-    
-   
-    if (_playIsPressed) {
-        _playIsPressed = NO;
+    if ([node.name isEqualToString:@"PlayButton"]) {
+        if (((SpriteButton*)node).selected == YES) {
+            [self transitionMenuToKey];
+        }
+        
     }
-    if (_midiIsPressed) {
-        _midiIsPressed = NO;
-    }
-    if (_cMajorIsPressed) {
-        _cMajorIsPressed = NO;
-    }
-    if (_gMajorIsPressed) {
-        _gMajorIsPressed = NO;
-    }
-    if (_dMajorIsPressed) {
-        _dMajorIsPressed = NO;
-    }
-    if (_aMajorIsPressed) {
-        _aMajorIsPressed = NO;
-    }
-    if (_eMajorIsPressed) {
-        _eMajorIsPressed = NO;
-    }
-    if (_bMajorIsPressed) {
-        _bMajorIsPressed = NO;
-    }
-    if (_cFlatMajorIsPressed) {
-        _cFlatMajorIsPressed = NO;
-    }
-    if (_fSharpMajorIsPressed) {
-        _fSharpMajorIsPressed = NO;
-    }
-    if (_gFlatMajorIsPressed) {
-        _gFlatMajorIsPressed = NO;
-    }
-    if (_cSharpMajorIsPressed) {
-        _cSharpMajorIsPressed = NO;
-    }
-    if (_dFlatMajorIsPressed) {
-        _dFlatMajorIsPressed = NO;
-    }
-    if (_aFlatMajorIsPressed) {
-        _aFlatMajorIsPressed = NO;
-    }
-    if (_eFlatMajorIsPressed) {
-        _eFlatMajorIsPressed = NO;
-    }
-    if (_bFlatMajorIsPressed) {
-        _bFlatMajorIsPressed = NO;
-    }
-    if (_fMajorIsPressed) {
-         _fMajorIsPressed = NO;
-    }
-    if (_trebleStaffIsPressed) {
-         _trebleStaffIsPressed = NO;
-    }
-    if (_bassStaffIsPressed) {
-        _bassStaffIsPressed = NO;
-    }
-    if (_grandStaffIsPressed) {
-        _grandStaffIsPressed = NO;
-    }
-    if (_singleNotesIsPressed) {
-        _singleNotesIsPressed = NO;
-    }
-    if (_multipleNotesIsPressed) {
-        _multipleNotesIsPressed = NO;
-    }
-    if (_combinationNotesIsPressed) {
-        _combinationNotesIsPressed = NO;
-    }
-    if (_retryButtonIsPressed) {
-        _retryButtonIsPressed = NO;
-    }
-    if (_returnButtonIsPressed) {
-        _returnButtonIsPressed = NO;
-    }
-    
-    
-    
-    
-    
 }
 
--(void)setButtonFlagsFromCaller:(NSString*)caller andName:(NSString *)name andDidPress:(bool*)didPress andDidRelease:(bool*)didRelease andIsPressed:(bool*)isPressed{
-    
-    if (*didPress == YES){
-        [self enumerateChildNodesWithName:name usingBlock:^(SKNode *node, BOOL *stop){
-            ((SKSpriteNode*)node).alpha = 0.5;
-        }];
-        *isPressed = YES;
-        *didPress = NO;
-    }
-    if(*didRelease == YES){
-        [self enumerateChildNodesWithName:name usingBlock:^(SKNode *node, BOOL *stop){
-            ((SKSpriteNode*)node).alpha = 1.0;
-            if ([caller  isEqual: @"Menu"]) {
-                [self transitionMenuToKey];
-            }
-            else if ([caller  isEqual: @"Key"]){
-                [self transitionKeyToStaff];
-            }
-            else if([caller  isEqual: @"Staff"]){
-                [self transitionStaffToNotes];
-                
-            }
-            else if([caller isEqual: @"Notes"]){
-                [self transitionNotesToLowRange];
-            }
-            else if([caller isEqual: @"Score"]){
-                //transition logic*****
-                if ([name isEqual:@"RetryButton"]) {
-                    //transition1
-                }
-                else if ([name isEqual:@"ReturnButton"]) {
-                    //transition2
-                }
-                
-            }
-            else if([caller isEqual:@"Midi"]){
-                [self cycleMidiDevices];
-            }
-            
-        }];
-        *didRelease = NO;
-    }
-    
-}
-
-
--(void)update:(CFTimeInterval)currentTime {
-    /* Called before each frame is rendered */
-}
 
 /*
  Determines Apple Device Model:
@@ -771,6 +138,7 @@ void midiInputCallback (const MIDIPacketList *list,
     else return 0;
 }
 
+
 -(NSString *)deviceSuffix:(int)device{
     
     switch (device) {
@@ -793,184 +161,62 @@ void midiInputCallback (const MIDIPacketList *list,
 -(void) didSimulatePhysics{
     
     //write code for -- dont monitor if not on particular page
-    if (_screenIsMenu) {
-        [self monitorMenu];
-        if(_didReleaseNothing == YES){
-            [self enumerateChildNodesWithName:@"PlayButton" usingBlock:^(SKNode *node, BOOL *stop){
-                ((SKSpriteNode*)node).alpha = 1.0;
-            }];
-            [self enumerateChildNodesWithName:@"MidiDeviceName" usingBlock:^(SKNode *node, BOOL *stop){
-                ((SKSpriteNode*)node).alpha = 1.0;
-            }];
-            _didReleaseNothing = NO;
-        }
-    }
-    else if (_screenIsKey) {
-        [self monitorKey];
-        if (_didReleaseNothing == YES) {
-            [self enumerateChildNodesWithName:@"CMajor" usingBlock:^(SKNode *node, BOOL *stop){
-                ((SKSpriteNode*)node).alpha = 1.0;
-            }];
-            [self enumerateChildNodesWithName:@"GMajor" usingBlock:^(SKNode *node, BOOL *stop){
-                ((SKSpriteNode*)node).alpha = 1.0;
-            }];
-            [self enumerateChildNodesWithName:@"DMajor" usingBlock:^(SKNode *node, BOOL *stop){
-                ((SKSpriteNode*)node).alpha = 1.0;
-            }];
-            [self enumerateChildNodesWithName:@"AMajor" usingBlock:^(SKNode *node, BOOL *stop){
-                ((SKSpriteNode*)node).alpha = 1.0;
-            }];
-            [self enumerateChildNodesWithName:@"EMajor" usingBlock:^(SKNode *node, BOOL *stop){
-                ((SKSpriteNode*)node).alpha = 1.0;
-            }];
-            [self enumerateChildNodesWithName:@"BMajor" usingBlock:^(SKNode *node, BOOL *stop){
-                ((SKSpriteNode*)node).alpha = 1.0;
-            }];
-            [self enumerateChildNodesWithName:@"CFlatMajor" usingBlock:^(SKNode *node, BOOL *stop){
-                ((SKSpriteNode*)node).alpha = 1.0;
-            }];
-            [self enumerateChildNodesWithName:@"FSharpMajor" usingBlock:^(SKNode *node, BOOL *stop){
-                ((SKSpriteNode*)node).alpha = 1.0;
-            }];
-            [self enumerateChildNodesWithName:@"GFlatMajor" usingBlock:^(SKNode *node, BOOL *stop){
-                ((SKSpriteNode*)node).alpha = 1.0;
-            }];
-            [self enumerateChildNodesWithName:@"CSharpMajor" usingBlock:^(SKNode *node, BOOL *stop){
-                ((SKSpriteNode*)node).alpha = 1.0;
-            }];
-            [self enumerateChildNodesWithName:@"DFlatMajor" usingBlock:^(SKNode *node, BOOL *stop){
-                ((SKSpriteNode*)node).alpha = 1.0;
-            }];
-            [self enumerateChildNodesWithName:@"AFlatMajor" usingBlock:^(SKNode *node, BOOL *stop){
-                ((SKSpriteNode*)node).alpha = 1.0;
-            }];
-            [self enumerateChildNodesWithName:@"EFlatMajor" usingBlock:^(SKNode *node, BOOL *stop){
-                ((SKSpriteNode*)node).alpha = 1.0;
-            }];
-            [self enumerateChildNodesWithName:@"BFlatMajor" usingBlock:^(SKNode *node, BOOL *stop){
-                ((SKSpriteNode*)node).alpha = 1.0;
-            }];
-            [self enumerateChildNodesWithName:@"FMajor" usingBlock:^(SKNode *node, BOOL *stop){
-                ((SKSpriteNode*)node).alpha = 1.0;
-            }];
-            _didReleaseNothing = NO;
-        }
-    }
-    else if (_screenIsStaff){
-        [self monitorStaff];
-        if (_didReleaseNothing == YES) {
-            [self enumerateChildNodesWithName:@"TrebleStaff" usingBlock:^(SKNode *node, BOOL *stop){
-                ((SKSpriteNode*)node).alpha = 1.0;
-            }];
-            [self enumerateChildNodesWithName:@"BassStaff" usingBlock:^(SKNode *node, BOOL *stop){
-                ((SKSpriteNode*)node).alpha = 1.0;
-            }];
-            [self enumerateChildNodesWithName:@"GrandStaff" usingBlock:^(SKNode *node, BOOL *stop){
-                ((SKSpriteNode*)node).alpha = 1.0;
-            }];
-            _didReleaseNothing = NO;
-        }
-    }
-    else if (_screenIsNotes){
-       [self monitorNotes];
-        if (_didReleaseNothing == YES) {
-            [self enumerateChildNodesWithName:@"SingleNotes" usingBlock:^(SKNode *node, BOOL *stop){
-                ((SKSpriteNode*)node).alpha = 1.0;
-            }];
-            [self enumerateChildNodesWithName:@"MultipleNotes" usingBlock:^(SKNode *node, BOOL *stop){
-                ((SKSpriteNode*)node).alpha = 1.0;
-            }];
-            [self enumerateChildNodesWithName:@"CombinationNotes" usingBlock:^(SKNode *node, BOOL *stop){
-                ((SKSpriteNode*)node).alpha = 1.0;
-            }];
-            _didReleaseNothing = NO;
-        }
-    }
-    
-    else if (_screenIsGame) {
+    if (_currentScreen == kGame) {
         
         if (_timeRemaining == 0) {
-            [self transtionGameToScore];
+            [self transitionGameToScore];
         }
         
     }
-    
-    else if (_screenIsScore){
-        [self monitorScore];
-        if (_didReleaseNothing == YES) {
-            [self enumerateChildNodesWithName:@"RetryButton" usingBlock:^(SKNode *node, BOOL *stop){
-                ((SKSpriteNode*)node).alpha = 1.0;
-            }];
-            [self enumerateChildNodesWithName:@"ReturnButton" usingBlock:^(SKNode *node, BOOL *stop){
-                ((SKSpriteNode*)node).alpha = 1.0;
-            }];
-            _didReleaseNothing = NO;
-        }
-    }
-    
-
-    
 }
+
+
 
 #pragma mark - Menu
 
 -(void)loadMenu{
     
-    _screenIsMenu = YES;
+    _currentScreen = kMenu;
+    
+    _menuScreenNode = [SKNode node];
+    _menuScreenNode.name = @"MenuScreenNode";
+    [self addChild:_menuScreenNode];
     
     NSString *playButtonImageName = @"PlayButton";
     playButtonImageName = [playButtonImageName stringByAppendingString:_deviceSuffix];
     SKTexture *playButtonTexture = [SKTexture textureWithImageNamed:playButtonImageName];
-    SKSpriteNode *playButtonSprite = [SKSpriteNode spriteNodeWithTexture:playButtonTexture];
-    playButtonSprite.name = @"PlayButton";
-    playButtonSprite.userInteractionEnabled = NO;
-    playButtonSprite.xScale = 0.5;
-    playButtonSprite.yScale = 0.5;
-    playButtonSprite.position = CGPointMake(0.5*self.size.width, 0.5*self.size.height);
-    [self addChild:playButtonSprite];
+    SpriteButton *playButtonNode = [SpriteButton spriteNodeWithTexture:playButtonTexture];
+    [playButtonNode setDefaults];
+    playButtonNode.name = @"PlayButton";
+    playButtonNode.position = CGPointMake(0.5*self.size.width, 0.5*self.size.height);
+    playButtonNode.delegate = self;
+    [_menuScreenNode addChild:playButtonNode];
     
+    NSString *bottomPanelImageName = @"Panel";
+    bottomPanelImageName = [bottomPanelImageName stringByAppendingString:_deviceSuffix];
+    SKTexture *bottomPanelTexture = [SKTexture textureWithImageNamed:bottomPanelImageName];
+    SpriteButton *bottomPanelNode = [SpriteButton spriteNodeWithTexture:bottomPanelTexture];
+    [bottomPanelNode setDefaults];
+    bottomPanelNode.name = @"BottomPanel";
+    bottomPanelNode.position = CGPointMake(0.5*self.size.width, 0.5*bottomPanelNode.size.height);
+    bottomPanelNode.delegate = self;
+    [_menuScreenNode addChild:bottomPanelNode];
     
-    NSString *titleImageName = @"Title";
-    titleImageName = [titleImageName stringByAppendingString:_deviceSuffix];
-    SKTexture *titleTexture = [SKTexture textureWithImageNamed:titleImageName];
-    SKSpriteNode *titleSprite = [SKSpriteNode spriteNodeWithTexture:titleTexture];
-    titleSprite.name = @"Title";
-    titleSprite.userInteractionEnabled = NO;
-    titleSprite.xScale = 0.5;
-    titleSprite.yScale = 0.5;
-    titleSprite.position =  CGPointMake(0.5*self.size.width, 0.8*self.size.height);
-    [self addChild:titleSprite];
-    
-    
-    NSString *panelImageName = @"Panel";
-    panelImageName = [panelImageName stringByAppendingString:_deviceSuffix];
-    SKTexture *panelTexture = [SKTexture textureWithImageNamed:panelImageName];
-    SKSpriteNode *panelSprite = [SKSpriteNode spriteNodeWithTexture:panelTexture];
-    panelSprite.name = @"Panel";
-    panelSprite.userInteractionEnabled = NO;
-    panelSprite.xScale = 0.5;
-    panelSprite.yScale = 0.5;
-    panelSprite.position = CGPointMake(0.5*self.size.width, 0.5*panelSprite.size.height);
-    [self addChild:panelSprite];
+    SKLabelNode *titleLabelNode = [SKLabelNode labelNodeWithFontNamed:@"HelveticaNeue-UltraLight"];
+    titleLabelNode.Name = @"TitleLabel";
+    titleLabelNode.fontSize = 0.1*self.size.height;
+    titleLabelNode.fontColor = [UIColor colorWithHue:212.0/360.0 saturation:67.0/100.0 brightness:89.0/100.0 alpha:1.0];
+    titleLabelNode.text = @"Staff Master";
+    titleLabelNode.position = CGPointMake(0.5*self.size.width, 0.8*self.size.height);
+    [_menuScreenNode addChild:titleLabelNode];
     
 
-    
     _midiDeviceName = [SKLabelNode labelNodeWithFontNamed:@"HelveticaNeue-UltraLight"];
-    _midiDeviceName.name = @"MidiDeviceName";
-    _midiDeviceName.fontSize = 0.5*panelSprite.size.height;
-    _midiDeviceName.position = CGPointMake(0.5*self.size.width, 0.5*panelSprite.size.height - 0.4*_midiDeviceName.fontSize);
+    _midiDeviceName.name = @"MidiDeviceNameLabel";
+    _midiDeviceName.fontSize = 0.5*bottomPanelNode.size.height;
+    _midiDeviceName.position = CGPointMake(0.5*self.size.width, 0.5*bottomPanelNode.size.height - 0.4*_midiDeviceName.fontSize);
     _midiDeviceName.text = _gameData.selectedDevice.name;
-    
-    [self addChild:_midiDeviceName];
-}
-
-
-
--(void)monitorMenu{
-    
-    [self setButtonFlagsFromCaller:@"Menu" andName:@"PlayButton" andDidPress:&_didPressPlay andDidRelease:&_didReleasePlay andIsPressed:&_playIsPressed];
-    
-    [self setButtonFlagsFromCaller:@"Midi" andName:@"MidiDeviceName" andDidPress:&_didPressMidi andDidRelease:&_didReleaseMidi andIsPressed:&_midiIsPressed];
+    [_menuScreenNode addChild:_midiDeviceName];
     
 }
 
@@ -989,42 +235,24 @@ void midiInputCallback (const MIDIPacketList *list,
         }
         
         [_gameData setSelectedDeviceWithIndex:_midiDeviceIndex];
-        
-        
     }
     else{
         [_gameData setSelectedDeviceToNone];
     }
     _midiDeviceName.text = _gameData.selectedDevice.name;
-    
-    
+
 }
 
 
 
 -(void)killMenu{
     
-    
-    _screenIsMenu = NO;
-    
-    [self enumerateChildNodesWithName:@"PlayButton" usingBlock:^(SKNode *node, BOOL *stop){
+    [self enumerateChildNodesWithName:@"MenuScreenNode" usingBlock:^(SKNode *node, BOOL *stop){
+        [node removeAllChildren];
+    }];
+    [self enumerateChildNodesWithName:@"MenuScreenNode" usingBlock:^(SKNode *node, BOOL *stop){
         [node removeFromParent];
     }];
-    
-    [self enumerateChildNodesWithName:@"Title" usingBlock:^(SKNode *node, BOOL *stop){
-        [node removeFromParent];
-    }];
-    [self enumerateChildNodesWithName:@"Panel" usingBlock:^(SKNode *node, BOOL *stop){
-        [node removeFromParent];
-    }];
-    [self enumerateChildNodesWithName:@"MidiDeviceName" usingBlock:^(SKNode *node, BOOL *stop){
-        [node removeFromParent];
-    }];
-    
-    //Register Selected Midi Device and initialize array to hold information about which notes are currently pressed
-    [MIDIUtility setupDeviceWithCallBack:midiInputCallback];
-    _notePressedFlags = [[NSMutableArray alloc]init];
-    _fifoMidiEvents = [[NSMutableArray alloc]init];
 }
 
 -(void)transitionMenuToKey{
@@ -1036,23 +264,31 @@ void midiInputCallback (const MIDIPacketList *list,
 
 #pragma mark - Key
 
-
-
 -(void)loadKey{
+    //Set current screen
+    _currentScreen = kKey;
     
-    _screenIsKey = YES;
+    //Register Selected Midi Device and initialize array to hold information about which notes are currently pressed
+    [MIDIUtility setupDeviceWithCallBack:midiInputCallback];
+    _notePressedFlags = [[NSMutableArray alloc]init];
+    _fifoMidiEvents = [[NSMutableArray alloc]init];
     
+    _keyScreenNode = [SKNode node];
+    _keyScreenNode.name = @"KeyScreenNode";
+    [self addChild:_keyScreenNode];
+    
+    //This node is a button that switches major key to minor key
     NSString *majorButtonImageName = @"Major";
     majorButtonImageName = [majorButtonImageName stringByAppendingString:_deviceSuffix];
     SKTexture *majorButtonTexture = [SKTexture textureWithImageNamed:majorButtonImageName];
-    SKSpriteNode *majorButtonSprite = [SKSpriteNode spriteNodeWithTexture:majorButtonTexture];
-    majorButtonSprite.name = @"Major";
-    majorButtonSprite.userInteractionEnabled = NO;
-    majorButtonSprite.xScale = 0.5;
-    majorButtonSprite.yScale = 0.5;
-    majorButtonSprite.position = CGPointMake(0.5*self.size.width, 0.5*self.size.height);
-    [self addChild:majorButtonSprite];
+    SpriteButton *majorButtonNode = [SpriteButton spriteNodeWithTexture:majorButtonTexture];
+    [majorButtonNode setDefaults];
+    majorButtonNode.name = @"MajorButton";
+    majorButtonNode.position = CGPointMake(0.5*self.size.width, 0.5*self.size.height);
+    majorButtonNode.delegate = self;
+    [_keyScreenNode addChild:majorButtonNode];
     
+    //calls a function that creates and adds a button for each key
     [self loadKeyNodeWithName:@"CMajor" andRotation:-0*M_PI/6];
     [self loadKeyNodeWithName:@"GMajor" andRotation:-1*M_PI/6];
     [self loadKeyNodeWithName:@"DMajor" andRotation:-2*M_PI/6];
@@ -1070,7 +306,6 @@ void midiInputCallback (const MIDIPacketList *list,
     [self loadKeyNodeWithName:@"FMajor" andRotation:-11*M_PI/6];
 }
 
-
 -(void)loadKeyNodeWithName:(NSString *)name andRotation:(float)radians{
     
     CGPoint circleCenter = CGPointMake(0.5*self.size.width, 0.5*self.size.height);
@@ -1078,87 +313,21 @@ void midiInputCallback (const MIDIPacketList *list,
     
     NSString *imageName = [name stringByAppendingString:_deviceSuffix];
     SKTexture *nodeTexture = [SKTexture textureWithImageNamed:imageName];
-    SKSpriteNode *node = [SKSpriteNode spriteNodeWithTexture:nodeTexture];
+    SpriteButton *node = [SpriteButton spriteNodeWithTexture:nodeTexture];
+    [node setDefaults];
     node.name = name;
-    node.userInteractionEnabled = NO;
-    node.xScale = 0.5;
-    node.yScale = 0.5;
     node.position = rotatedPosition(circleCenter, radius - 0.5*node.size.height, radians);
     node.zRotation = radians;
-    [self addChild:node];
-    
+    node.delegate = self;
+    [_keyScreenNode addChild:node];
 }
-
--(void)monitorKey{
-    
-    [self setButtonFlagsFromCaller:@"Key" andName:@"CMajor" andDidPress:&_didPressCMajor andDidRelease:&_didReleaseCMajor andIsPressed:&_cMajorIsPressed ];
-    [self setButtonFlagsFromCaller:@"Key" andName:@"GMajor" andDidPress:&_didPressGMajor andDidRelease:&_didReleaseGMajor andIsPressed:&_gMajorIsPressed ];
-    [self setButtonFlagsFromCaller:@"Key" andName:@"DMajor" andDidPress:&_didPressDMajor andDidRelease:&_didReleaseDMajor andIsPressed:&_dMajorIsPressed ];
-    [self setButtonFlagsFromCaller:@"Key" andName:@"AMajor" andDidPress:&_didPressAMajor andDidRelease:&_didReleaseAMajor andIsPressed:&_aMajorIsPressed ];
-    [self setButtonFlagsFromCaller:@"Key" andName:@"EMajor" andDidPress:&_didPressEMajor andDidRelease:&_didReleaseEMajor andIsPressed:&_eMajorIsPressed ];
-    [self setButtonFlagsFromCaller:@"Key" andName:@"BMajor" andDidPress:&_didPressBMajor andDidRelease:&_didReleaseBMajor andIsPressed:&_bMajorIsPressed ];
-    [self setButtonFlagsFromCaller:@"Key" andName:@"CFlatMajor" andDidPress:&_didPressCFlatMajor andDidRelease:&_didReleaseCFlatMajor andIsPressed:&_cFlatMajorIsPressed ];
-    [self setButtonFlagsFromCaller:@"Key" andName:@"FSharpMajor" andDidPress:&_didPressFSharpMajor andDidRelease:&_didReleaseFSharpMajor andIsPressed:&_fSharpMajorIsPressed ];
-    [self setButtonFlagsFromCaller:@"Key" andName:@"GFlatMajor" andDidPress:&_didPressGFlatMajor andDidRelease:&_didReleaseGFlatMajor andIsPressed:&_gFlatMajorIsPressed ];
-    [self setButtonFlagsFromCaller:@"Key" andName:@"CSharpMajor" andDidPress:&_didPressCSharpMajor andDidRelease:&_didReleaseCSharpMajor andIsPressed:&_cSharpMajorIsPressed ];
-    [self setButtonFlagsFromCaller:@"Key" andName:@"DFlatMajor" andDidPress:&_didPressDFlatMajor andDidRelease:&_didReleaseDFlatMajor andIsPressed:&_dFlatMajorIsPressed ];
-    [self setButtonFlagsFromCaller:@"Key" andName:@"AFlatMajor" andDidPress:&_didPressAFlatMajor andDidRelease:&_didReleaseAFlatMajor andIsPressed:&_aFlatMajorIsPressed ];
-    [self setButtonFlagsFromCaller:@"Key" andName:@"EFlatMajor" andDidPress:&_didPressEFlatMajor andDidRelease:&_didReleaseEFlatMajor andIsPressed:&_eFlatMajorIsPressed ];
-    [self setButtonFlagsFromCaller:@"Key" andName:@"BFlatMajor" andDidPress:&_didPressBFlatMajor andDidRelease:&_didReleaseBFlatMajor andIsPressed:&_bFlatMajorIsPressed ];
-    [self setButtonFlagsFromCaller:@"Key" andName:@"FMajor" andDidPress:&_didPressFMajor andDidRelease:&_didReleaseFMajor andIsPressed:&_fMajorIsPressed ];
-}
-
 
 -(void)killKey{
     
-    _screenIsKey = NO;
-    
-    [self enumerateChildNodesWithName:@"CMajor" usingBlock:^(SKNode *node, BOOL *stop){
-        [node removeFromParent];
+    [self enumerateChildNodesWithName:@"KeyScreenNode" usingBlock:^(SKNode *node, BOOL *stop){
+        [node removeAllChildren];
     }];
-    [self enumerateChildNodesWithName:@"GMajor" usingBlock:^(SKNode *node, BOOL *stop){
-        [node removeFromParent];
-    }];
-    [self enumerateChildNodesWithName:@"DMajor" usingBlock:^(SKNode *node, BOOL *stop){
-        [node removeFromParent];
-    }];
-    [self enumerateChildNodesWithName:@"AMajor" usingBlock:^(SKNode *node, BOOL *stop){
-        [node removeFromParent];
-    }];
-    [self enumerateChildNodesWithName:@"EMajor" usingBlock:^(SKNode *node, BOOL *stop){
-        [node removeFromParent];
-    }];
-    [self enumerateChildNodesWithName:@"BMajor" usingBlock:^(SKNode *node, BOOL *stop){
-        [node removeFromParent];
-    }];
-    [self enumerateChildNodesWithName:@"CFlatMajor" usingBlock:^(SKNode *node, BOOL *stop){
-        [node removeFromParent];
-    }];
-    [self enumerateChildNodesWithName:@"FSharpMajor" usingBlock:^(SKNode *node, BOOL *stop){
-        [node removeFromParent];
-    }];
-    [self enumerateChildNodesWithName:@"GFlatMajor" usingBlock:^(SKNode *node, BOOL *stop){
-        [node removeFromParent];
-    }];
-    [self enumerateChildNodesWithName:@"CSharpMajor" usingBlock:^(SKNode *node, BOOL *stop){
-        [node removeFromParent];
-    }];
-    [self enumerateChildNodesWithName:@"DFlatMajor" usingBlock:^(SKNode *node, BOOL *stop){
-        [node removeFromParent];
-    }];
-    [self enumerateChildNodesWithName:@"AFlatMajor" usingBlock:^(SKNode *node, BOOL *stop){
-        [node removeFromParent];
-    }];
-    [self enumerateChildNodesWithName:@"EFlatMajor" usingBlock:^(SKNode *node, BOOL *stop){
-        [node removeFromParent];
-    }];
-    [self enumerateChildNodesWithName:@"BFlatMajor" usingBlock:^(SKNode *node, BOOL *stop){
-        [node removeFromParent];
-    }];
-    [self enumerateChildNodesWithName:@"FMajor" usingBlock:^(SKNode *node, BOOL *stop){
-        [node removeFromParent];
-    }];
-    [self enumerateChildNodesWithName:@"Major" usingBlock:^(SKNode *node, BOOL *stop){
+    [self enumerateChildNodesWithName:@"KeyScreenNode" usingBlock:^(SKNode *node, BOOL *stop){
         [node removeFromParent];
     }];
 }
@@ -1172,53 +341,43 @@ void midiInputCallback (const MIDIPacketList *list,
 
 -(void)loadStaff{
     
-    _screenIsStaff = YES;
+    _currentScreen = kStaff;
+
+    _staffScreenNode = [SKNode node];
+    _staffScreenNode.name = @"StaffScreenNode";
+    [self addChild:_staffScreenNode];
+
     
-    float adjustedHeight = 0.9*self.size.height;
-    CGPoint adjustedCenter =CGPointMake(0.5*self.size.width, 0.1*self.size.height + 0.50 * adjustedHeight);
     
-    SKSpriteNode *trebleStaffButtonNode = [SKSpriteNode spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"TrebleStaff" stringByAppendingString:_deviceSuffix]]];
+    SpriteButton *trebleStaffButtonNode = [SpriteButton spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"TrebleStaff" stringByAppendingString:_deviceSuffix]]];
+    [trebleStaffButtonNode setDefaults];
     trebleStaffButtonNode.name = @"TrebleStaff";
-    trebleStaffButtonNode.xScale = 0.5;
-    trebleStaffButtonNode.yScale = 0.5;
-    trebleStaffButtonNode.position = CGPointMake(0.5*self.size.width, self.size.height - 0.5*(self.size.height - adjustedCenter.y - 0.5*trebleStaffButtonNode.size.height));
-    [self addChild:trebleStaffButtonNode];
+    int spaceBetweenButtons = (self.size.height - 3*trebleStaffButtonNode.size.height)/4;
+    trebleStaffButtonNode.position = CGPointMake(0.5*self.size.width, 3*spaceBetweenButtons + 2.5*trebleStaffButtonNode.size.height);
+    trebleStaffButtonNode.delegate = self;
+    [_staffScreenNode addChild:trebleStaffButtonNode];
     
-    SKSpriteNode *bassStaffButtonNode = [SKSpriteNode spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"BassStaff" stringByAppendingString:_deviceSuffix]]];
+    SpriteButton *bassStaffButtonNode = [SpriteButton spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"BassStaff" stringByAppendingString:_deviceSuffix]]];
+    [bassStaffButtonNode setDefaults];
     bassStaffButtonNode.name = @"BassStaff";
-    bassStaffButtonNode.xScale = 0.5;
-    bassStaffButtonNode.yScale = 0.5;
-    bassStaffButtonNode.position = CGPointMake(0.5*self.size.width, 0.1*self.size.height + 0.50 * 0.9*self.size.height);
-    [self addChild:bassStaffButtonNode];
+    bassStaffButtonNode.position = CGPointMake(0.5*self.size.width, 2*spaceBetweenButtons + 1.5*bassStaffButtonNode.size.height);
+    bassStaffButtonNode.delegate = self;
+    [_staffScreenNode addChild:bassStaffButtonNode];
     
-    SKSpriteNode *grandStaffButtonNode = [SKSpriteNode spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"GrandStaff" stringByAppendingString:_deviceSuffix]]];
+    SpriteButton *grandStaffButtonNode = [SpriteButton spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"GrandStaff" stringByAppendingString:_deviceSuffix]]];
+    [grandStaffButtonNode setDefaults];
     grandStaffButtonNode.name = @"GrandStaff";
-    grandStaffButtonNode.xScale = 0.5;
-    grandStaffButtonNode.yScale = 0.5;
-    grandStaffButtonNode.position = CGPointMake(0.5*self.size.width, 0.5*((adjustedCenter.y - 0.5*grandStaffButtonNode.size.height) + 0.1*self.size.height));
-    [self addChild:grandStaffButtonNode];
+    grandStaffButtonNode.position = CGPointMake(0.5*self.size.width, 1*spaceBetweenButtons + 0.5*grandStaffButtonNode.size.height);
+    grandStaffButtonNode.delegate = self;
+    [_staffScreenNode addChild:grandStaffButtonNode];
     
-}
-    
-
-
--(void)monitorStaff{
-    [self setButtonFlagsFromCaller:@"Staff" andName:@"TrebleStaff" andDidPress:&_didPressTrebleStaff andDidRelease:&_didReleaseTrebleStaff andIsPressed:&_trebleStaffIsPressed ];
-    [self setButtonFlagsFromCaller:@"Staff" andName:@"BassStaff" andDidPress:&_didPressBassStaff andDidRelease:&_didReleaseBassStaff andIsPressed:&_bassStaffIsPressed ];
-    [self setButtonFlagsFromCaller:@"Staff" andName:@"GrandStaff" andDidPress:&_didPressGrandStaff andDidRelease:&_didReleaseGrandStaff andIsPressed:&_grandStaffIsPressed ];
 }
 
 -(void)killStaff{
-    
-    _screenIsStaff = NO;
-    
-    [self enumerateChildNodesWithName:@"TrebleStaff" usingBlock:^(SKNode *node, BOOL *stop){
-        [node removeFromParent];
+    [self enumerateChildNodesWithName:@"StaffScreenNode" usingBlock:^(SKNode *node, BOOL *stop){
+        [node removeAllChildren];
     }];
-    [self enumerateChildNodesWithName:@"BassStaff" usingBlock:^(SKNode *node, BOOL *stop){
-        [node removeFromParent];
-    }];
-    [self enumerateChildNodesWithName:@"GrandStaff" usingBlock:^(SKNode *node, BOOL *stop){
+    [self enumerateChildNodesWithName:@"StaffScreenNode" usingBlock:^(SKNode *node, BOOL *stop){
         [node removeFromParent];
     }];
 }
@@ -1232,57 +391,47 @@ void midiInputCallback (const MIDIPacketList *list,
 
 -(void)loadNotes{
     
-    _screenIsNotes = YES;
+    _currentScreen = kNotes;
     
-    float adjustedHeight = 0.9*self.size.height;
-    CGPoint adjustedCenter =CGPointMake(0.5*self.size.width, 0.1*self.size.height + 0.50 * adjustedHeight);
+    _notesScreenNode = [SKNode node];
+    _notesScreenNode.name = @"NotesScreenNode";
+    [self addChild:_notesScreenNode];
     
-    SKSpriteNode *trebleStaffButtonNode = [SKSpriteNode spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"SingleNotes" stringByAppendingString:_deviceSuffix]]];
-    trebleStaffButtonNode.name = @"SingleNotes";
-    trebleStaffButtonNode.xScale = 0.5;
-    trebleStaffButtonNode.yScale = 0.5;
-    trebleStaffButtonNode.position = CGPointMake(0.5*self.size.width, self.size.height - 0.5*(self.size.height - adjustedCenter.y - 0.5*trebleStaffButtonNode.size.height));
-    [self addChild:trebleStaffButtonNode];
     
-    SKSpriteNode *bassStaffButtonNode = [SKSpriteNode spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"MultipleNotes" stringByAppendingString:_deviceSuffix]]];
-    bassStaffButtonNode.name = @"MultipleNotes";
-    bassStaffButtonNode.xScale = 0.5;
-    bassStaffButtonNode.yScale = 0.5;
-    bassStaffButtonNode.position = CGPointMake(0.5*self.size.width, 0.1*self.size.height + 0.50 * 0.9*self.size.height);
-    [self addChild:bassStaffButtonNode];
+    SpriteButton *singleNotesButtonNode = [SpriteButton spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"SingleNotes" stringByAppendingString:_deviceSuffix]]];
+    [singleNotesButtonNode setDefaults];
+    singleNotesButtonNode.name = @"SingleNotes";
+    int spaceBetweenButtons = (self.size.height - 3*singleNotesButtonNode.size.height)/4;
+    singleNotesButtonNode.position = CGPointMake(0.5*self.size.width, 3*spaceBetweenButtons + 2.5*singleNotesButtonNode.size.height);
+    singleNotesButtonNode.delegate = self;
+    [_notesScreenNode addChild:singleNotesButtonNode];
     
-    SKSpriteNode *grandStaffButtonNode = [SKSpriteNode spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"CombinationNotes" stringByAppendingString:_deviceSuffix]]];
-    grandStaffButtonNode.name = @"CombinationNotes";
-    grandStaffButtonNode.xScale = 0.5;
-    grandStaffButtonNode.yScale = 0.5;
-    grandStaffButtonNode.position = CGPointMake(0.5*self.size.width, 0.5*((adjustedCenter.y - 0.5*grandStaffButtonNode.size.height) + 0.1*self.size.height));
-    [self addChild:grandStaffButtonNode];
+    SpriteButton *multipleNotesButtonNode = [SpriteButton spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"MultipleNotes" stringByAppendingString:_deviceSuffix]]];
+    [multipleNotesButtonNode setDefaults];
+    multipleNotesButtonNode.name = @"MultipleNotes";
+    multipleNotesButtonNode.position = CGPointMake(0.5*self.size.width, 2*spaceBetweenButtons + 1.5*multipleNotesButtonNode.size.height);
+    multipleNotesButtonNode.delegate = self;
+    [_notesScreenNode addChild:multipleNotesButtonNode];
     
-}
-
--(void)monitorNotes{
-    [self setButtonFlagsFromCaller:@"Notes" andName:@"SingleNotes" andDidPress:&_didPressSingleNotes andDidRelease:&_didReleaseSingleNotes andIsPressed:&_singleNotesIsPressed ];
-    [self setButtonFlagsFromCaller:@"Notes" andName:@"MultipleNotes" andDidPress:&_didPressMultipleNotes andDidRelease:&_didReleaseMultipleNotes andIsPressed:&_multipleNotesIsPressed ];
-    [self setButtonFlagsFromCaller:@"Notes" andName:@"CombinationNotes" andDidPress:&_didPressCombinationNotes andDidRelease:&_didReleaseCombinationNotes andIsPressed:&_combinationNotesIsPressed ];
+    SpriteButton *combinationNotesButtonNode = [SpriteButton spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"CombinationNotes" stringByAppendingString:_deviceSuffix]]];
+    [combinationNotesButtonNode setDefaults];
+    combinationNotesButtonNode.name = @"CombinationNotes";
+    combinationNotesButtonNode.position = CGPointMake(0.5*self.size.width, 1*spaceBetweenButtons + 0.5*combinationNotesButtonNode.size.height);
+    combinationNotesButtonNode.delegate = self;
+    [_notesScreenNode addChild:combinationNotesButtonNode];
     
 }
 
 -(void)killNotes{
     
-    _screenIsNotes = NO;
-    
-    [self enumerateChildNodesWithName:@"SingleNotes" usingBlock:^(SKNode *node, BOOL *stop){
+    [self enumerateChildNodesWithName:@"NotesScreenNode" usingBlock:^(SKNode *node, BOOL *stop){
+        [node removeAllChildren];
+    }];
+    [self enumerateChildNodesWithName:@"NotesScreenNode" usingBlock:^(SKNode *node, BOOL *stop){
         [node removeFromParent];
     }];
-    [self enumerateChildNodesWithName:@"MultipleNotes" usingBlock:^(SKNode *node, BOOL *stop){
-        [node removeFromParent];
-    }];
-    [self enumerateChildNodesWithName:@"CombinationNotes" usingBlock:^(SKNode *node, BOOL *stop){
-        [node removeFromParent];
-    }];
-    
-    
 }
+
 -(void)transitionNotesToLowRange{
     [self killNotes];
     [self loadLowRange];
@@ -1292,19 +441,37 @@ void midiInputCallback (const MIDIPacketList *list,
 
 -(void)loadLowRange{
     
-    _screenIsLowRange = YES;
+    _currentScreen = kLowRange;
     
-    SKSpriteNode *LowRangeNode = [SKSpriteNode spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"LowRange" stringByAppendingString:_deviceSuffix]]];
-    LowRangeNode.name = @"LowRange";
-    LowRangeNode.xScale = 0.5;
-    LowRangeNode.yScale = 0.5;
-    LowRangeNode.position = CGPointMake(0.5*self.size.width, 0.5*self.size.height);
-    [self addChild:LowRangeNode];
+    _lowRangeScreenNode = [SKNode node];
+    _lowRangeScreenNode.name = @"LowRangeScreenNode";
+    [self addChild:_lowRangeScreenNode];
+    
+    SKColor *textColor =[UIColor colorWithHue:212.0/360.0 saturation:67.0/100.0 brightness:89.0/100.0 alpha:1.0];
+    SKLabelNode *lowRangeLabelNode = [SKLabelNode labelNodeWithFontNamed:@"HelveticaNeue-UltraLight"];
+    lowRangeLabelNode.Name = @"LowRange";
+    lowRangeLabelNode.fontSize = 0.07*self.size.height;
+    lowRangeLabelNode.fontColor =textColor;
+    lowRangeLabelNode.text = @"Play Lowest Note";
+    lowRangeLabelNode.position = CGPointMake(0.5*self.size.width, 0.5*self.size.height);
+    [_lowRangeScreenNode addChild:lowRangeLabelNode];
+    
+    SKAction *blink = [SKAction sequence:@[
+                                           [SKAction fadeAlphaTo:0.5 duration:1.0],
+                                           [SKAction fadeAlphaTo:1.0 duration:0.5]]];
+    
+                       
+    [lowRangeLabelNode runAction:[SKAction repeatActionForever:blink]];
+     
+
 }
 
 -(void)killLowRange{
-    _screenIsLowRange = NO;
-    [self enumerateChildNodesWithName:@"LowRange" usingBlock:^(SKNode *node, BOOL *stop){
+    
+    [self enumerateChildNodesWithName:@"LowRangeScreenNode" usingBlock:^(SKNode *node, BOOL *stop){
+        [node removeAllChildren];
+    }];
+    [self enumerateChildNodesWithName:@"LowRangeScreenNode" usingBlock:^(SKNode *node, BOOL *stop){
         [node removeFromParent];
     }];
     
@@ -1317,24 +484,34 @@ void midiInputCallback (const MIDIPacketList *list,
 }
 
 -(void)loadHighRange{
-    _screenIsHighRange = YES;
-    SKSpriteNode *LowRangeNode = [SKSpriteNode spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"HighRange" stringByAppendingString:_deviceSuffix]]];
-    LowRangeNode.name = @"HighRange";
-    LowRangeNode.xScale = 0.5;
-    LowRangeNode.yScale = 0.5;
-    LowRangeNode.position = CGPointMake(0.5*self.size.width, 0.5*self.size.height);
-    [self addChild:LowRangeNode];
+    
+    _currentScreen = kHighRange;
+    
+    _highRangeScreenNode = [SKNode node];
+    _highRangeScreenNode.name = @"HighRangeScreenNode";
+    [self addChild:_highRangeScreenNode];
+    
+    SKLabelNode *highRangeLabelNode = [SKLabelNode labelNodeWithFontNamed:@"HelveticaNeue-UltraLight"];
+    highRangeLabelNode.Name = @"HighRange";
+    highRangeLabelNode.fontSize = 0.07*self.size.height;
+    highRangeLabelNode.fontColor = [UIColor colorWithHue:212.0/360.0 saturation:67.0/100.0 brightness:89.0/100.0 alpha:1.0];
+    highRangeLabelNode.text = @"Play Highest Note";
+    highRangeLabelNode.position = CGPointMake(0.5*self.size.width, 0.5*self.size.height);
+    [_highRangeScreenNode addChild:highRangeLabelNode];
+    
+    SKAction *blink = [SKAction sequence:@[
+                                           [SKAction fadeAlphaTo:0.5 duration:1.0],
+                                           [SKAction fadeAlphaTo:1.0 duration:0.5]]];
+    
+    
+    [highRangeLabelNode runAction:[SKAction repeatActionForever:blink]];
 }
 
 -(void)killHighRange{
-    
-    _screenIsHighRange = NO;
-    
-    [self enumerateChildNodesWithName:@"HighRange" usingBlock:^(SKNode *node, BOOL *stop){
-        [node removeFromParent];
+    [self enumerateChildNodesWithName:@"HighRangeScreenNode" usingBlock:^(SKNode *node, BOOL *stop){
+        [node removeAllChildren];
     }];
-    
-    [self enumerateChildNodesWithName:@"Panel" usingBlock:^(SKNode *node, BOOL *stop){
+    [self enumerateChildNodesWithName:@"HighRangeScreenNode" usingBlock:^(SKNode *node, BOOL *stop){
         [node removeFromParent];
     }];
 }
@@ -1349,13 +526,17 @@ void midiInputCallback (const MIDIPacketList *list,
 
 -(void)loadGame{
     
-    _screenIsGame = YES;
+    _currentScreen = kGame;
     _timeRemaining = 60;
     _score = 0;
     
     [_notePressedFlags removeAllObjects];
     
     self.backgroundColor = [UIColor whiteColor];
+    
+    _gameScreenNode = [SKNode node];
+    _gameScreenNode.name = @"GameScreenNode";
+    [self addChild:_gameScreenNode];
     
     [self loadStaffLineWithPosition:CGPointMake(0.5*self.size.width, 7*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
     [self loadStaffLineWithPosition:CGPointMake(0.5*self.size.width, 8*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
@@ -1373,14 +554,14 @@ void midiInputCallback (const MIDIPacketList *list,
     bassClef.xScale = 0.5;
     bassClef.yScale = 0.5;
     bassClef.position = CGPointMake(0.1*self.size.width, 9.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1));
-    [self addChild:bassClef];
+    [_gameScreenNode addChild:bassClef];
     
     SKSpriteNode *trebleClef = [SKSpriteNode spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"TrebleClef" stringByAppendingString:_deviceSuffix]]];
     trebleClef.name = @"TrebleClef";
     trebleClef.xScale = 0.5;
     trebleClef.yScale = 0.5;
     trebleClef.position = CGPointMake(0.1*self.size.width, 23*self.size.height/(NUMBER_OF_STAFF_LINES + 1));
-    [self addChild:trebleClef];
+    [_gameScreenNode addChild:trebleClef];
     
     _currentNameNode = [SKLabelNode labelNodeWithFontNamed:@"HelveticaNeue-UltraLight"];
     _currentNameNode.name = @"NoteName";
@@ -1388,7 +569,7 @@ void midiInputCallback (const MIDIPacketList *list,
     _currentNameNode.fontColor = [UIColor blackColor];
     _currentNameNode.position = CGPointMake(0.95*self.size.width, 0.05*self.size.height);
     _currentNameNode.horizontalAlignmentMode = SKLabelHorizontalAlignmentModeRight;
-    [self addChild:_currentNameNode];
+    [_gameScreenNode addChild:_currentNameNode];
    
     _timeRemainingNode = [SKLabelNode labelNodeWithFontNamed:@"HelveticaNeue-UltraLight"];
     _timeRemainingNode.name = @"TimeRemaining";
@@ -1397,7 +578,7 @@ void midiInputCallback (const MIDIPacketList *list,
     _timeRemainingNode.position = CGPointMake(0.95*self.size.width, 0.9*self.size.height);
     _timeRemainingNode.horizontalAlignmentMode = SKLabelHorizontalAlignmentModeRight;
     _timeRemainingNode.text = [NSString stringWithFormat:@":%i",_timeRemaining];
-    [self addChild:_timeRemainingNode];
+    [_gameScreenNode addChild:_timeRemainingNode];
     
     _scoreNode = [SKLabelNode labelNodeWithFontNamed:@"HelveticaNeue-UltraLight"];
     _scoreNode.name = @"Score";
@@ -1406,7 +587,7 @@ void midiInputCallback (const MIDIPacketList *list,
     _scoreNode.position = CGPointMake(0.05*self.size.width, 0.9*self.size.height);
     _scoreNode.horizontalAlignmentMode = SKLabelHorizontalAlignmentModeLeft;
     _scoreNode.text = [NSString stringWithFormat:@"%i",_score];
-    [self addChild:_scoreNode];
+    [_gameScreenNode addChild:_scoreNode];
     
     id wait = [SKAction waitForDuration:1];
     id run = [SKAction runBlock:^{
@@ -1420,31 +601,16 @@ void midiInputCallback (const MIDIPacketList *list,
 }
 
 -(void)killGame{
-    _screenIsGame = NO;
-    
-    [self enumerateChildNodesWithName:@"BassClef" usingBlock:^(SKNode *node, BOOL *stop){
+  
+    [self enumerateChildNodesWithName:@"GameScreenNode" usingBlock:^(SKNode *node, BOOL *stop){
+        [node removeAllChildren];
+    }];
+    [self enumerateChildNodesWithName:@"GameScreenNode" usingBlock:^(SKNode *node, BOOL *stop){
         [node removeFromParent];
     }];
-    [self enumerateChildNodesWithName:@"TrebleClef" usingBlock:^(SKNode *node, BOOL *stop){
-        [node removeFromParent];
-    }];
-    [self enumerateChildNodesWithName:@"StaffLine" usingBlock:^(SKNode *node, BOOL *stop){
-        [node removeFromParent];
-    }];
-    [self enumerateChildNodesWithName:@"Note" usingBlock:^(SKNode *node, BOOL *stop){
-        [node removeFromParent];
-    }];
-    [self enumerateChildNodesWithName:@"NoteName" usingBlock:^(SKNode *node, BOOL *stop){
-        [node removeFromParent];
-    }];
-    [self enumerateChildNodesWithName:@"TimeRemaining" usingBlock:^(SKNode *node, BOOL *stop){
-        [node removeFromParent];
-    }];
-    [self enumerateChildNodesWithName:@"Score" usingBlock:^(SKNode *node, BOOL *stop){
-        [node removeFromParent];
-    }];
+
 }
--(void)transtionGameToScore{
+-(void)transitionGameToScore{
     [self killGame];
     [self loadScore];
 }
@@ -1453,6 +619,7 @@ void midiInputCallback (const MIDIPacketList *list,
     _timeRemaining--;
     _timeRemainingNode.text = [NSString stringWithFormat:@":%i",_timeRemaining];
 }
+
 -(void)removeGameNotes{
     [self enumerateChildNodesWithName:@"Note" usingBlock:^(SKNode *node, BOOL *stop){
         [node removeFromParent];
@@ -1465,77 +632,76 @@ void midiInputCallback (const MIDIPacketList *list,
 
 -(void)loadScore{
     
-    _screenIsScore = YES;
+    _currentScreen = kScore;
     self.backgroundColor = [UIColor darkGrayColor];
     
-    SKSpriteNode *gameOverNode = [SKSpriteNode spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"GameOver" stringByAppendingString:_deviceSuffix]]];
-    gameOverNode.name = @"GameOver";
-    gameOverNode.xScale = 0.5;
-    gameOverNode.yScale = 0.5;
-    gameOverNode.position = CGPointMake(0.5*self.size.width, 0.85*self.size.height);
-    [self addChild:gameOverNode];
+    _scoreScreenNode = [SKNode node];
+    _scoreScreenNode.name = @"ScoreScreenNode";
+    [self addChild:_scoreScreenNode];
+    
+    SKLabelNode *gameOverLabelNode = [SKLabelNode labelNodeWithFontNamed:@"HelveticaNeue-UltraLight"];
+    gameOverLabelNode.Name = @"GameOver";
+    gameOverLabelNode.fontSize = 0.1*self.size.height;
+    gameOverLabelNode.fontColor = [UIColor colorWithHue:212.0/360.0 saturation:67.0/100.0 brightness:89.0/100.0 alpha:1.0];
+    gameOverLabelNode.text = @"Game Over";
+    gameOverLabelNode.position = CGPointMake(0.5*self.size.width, 0.85*self.size.height);
+    [_menuScreenNode addChild:gameOverLabelNode];
     
     SKSpriteNode *scoreBannerNode = [SKSpriteNode spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"ScoreBanner" stringByAppendingString:_deviceSuffix]]];
     scoreBannerNode.name = @"ScoreBanner";
     scoreBannerNode.xScale = 0.5;
     scoreBannerNode.yScale = 0.5;
     scoreBannerNode.position = CGPointMake(0.5*self.size.width, 0.7*self.size.height);
-    [self addChild:scoreBannerNode];
+    [_scoreScreenNode addChild:scoreBannerNode];
     
     SKSpriteNode *bestBannerNode = [SKSpriteNode spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"BestBanner" stringByAppendingString:_deviceSuffix]]];
     bestBannerNode.name = @"BestBanner";
     bestBannerNode.xScale = 0.5;
     bestBannerNode.yScale = 0.5;
     bestBannerNode.position = CGPointMake(0.5*self.size.width, scoreBannerNode.position.y - 0.5*scoreBannerNode.size.height - 0.5*bestBannerNode.size.height);
-    [self addChild:bestBannerNode];
+    [_scoreScreenNode addChild:bestBannerNode];
     
     
-    
-    SKSpriteNode *retryButtonNode = [SKSpriteNode spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"RetryButton" stringByAppendingString:_deviceSuffix]]];
+    SpriteButton *retryButtonNode = [SpriteButton spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"RetryButton" stringByAppendingString:_deviceSuffix]]];
+    [retryButtonNode setDefaults];
     retryButtonNode.name = @"RetryButton";
-    retryButtonNode.xScale = 0.5;
-    retryButtonNode.yScale = 0.5;
     int buttonSectionHeight = (bestBannerNode.position.y - 0.5*bestBannerNode.size.height);
     int spaceBetweenButtons = (buttonSectionHeight - 2*retryButtonNode.size.height)/3;
     retryButtonNode.position = CGPointMake(0.5*self.size.width, 0.5*buttonSectionHeight + 0.5*spaceBetweenButtons + 0.5*retryButtonNode.size.height);
-    [self addChild:retryButtonNode];
+    retryButtonNode.delegate = self;
+    [_scoreScreenNode addChild:retryButtonNode];
     
-    SKSpriteNode *returnButtonNode = [SKSpriteNode spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"ReturnButton" stringByAppendingString:_deviceSuffix]]];
+    SpriteButton *returnButtonNode = [SpriteButton spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"ReturnButton" stringByAppendingString:_deviceSuffix]]];
+    [returnButtonNode setDefaults];
     returnButtonNode.name = @"ReturnButton";
-    returnButtonNode.xScale = 0.5;
-    returnButtonNode.yScale = 0.5;
     returnButtonNode.position = CGPointMake(0.5*self.size.width, spaceBetweenButtons + 0.5*returnButtonNode.size.height);
-    [self addChild:returnButtonNode];
+    returnButtonNode.delegate = self;
+    [_scoreScreenNode addChild:returnButtonNode];
     
     
 }
 
-
--(void)monitorScore{
-    [self setButtonFlagsFromCaller:@"Score" andName:@"RetryButton" andDidPress:&_didPressRetryButton andDidRelease:&_didReleaseRetryButton andIsPressed:&_retryButtonIsPressed ];
-    [self setButtonFlagsFromCaller:@"Score" andName:@"ReturnButton" andDidPress:&_didPressReturnButton andDidRelease:&_didReleaseReturnButton andIsPressed:&_returnButtonIsPressed ];
-    
-}
 
 -(void)killScore{
-    [self enumerateChildNodesWithName:@"GameOver" usingBlock:^(SKNode *node, BOOL *stop){
-        [node removeFromParent];
+    
+    [self enumerateChildNodesWithName:@"ScoreScreenNode" usingBlock:^(SKNode *node, BOOL *stop){
+        [node removeAllChildren];
     }];
-    [self enumerateChildNodesWithName:@"ScoreBanner" usingBlock:^(SKNode *node, BOOL *stop){
-        [node removeFromParent];
-    }];
-    [self enumerateChildNodesWithName:@"BestBanner" usingBlock:^(SKNode *node, BOOL *stop){
-        [node removeFromParent];
-    }];
-    [self enumerateChildNodesWithName:@"RetryButton" usingBlock:^(SKNode *node, BOOL *stop){
-        [node removeFromParent];
-    }];
-    [self enumerateChildNodesWithName:@"ReturnButton" usingBlock:^(SKNode *node, BOOL *stop){
+    
+    [self enumerateChildNodesWithName:@"ScoreScreenNode" usingBlock:^(SKNode *node, BOOL *stop){
         [node removeFromParent];
     }];
 }
 
+-(void)transitionScoreToGame{
+    [self killScore];
+    [self loadGame];
+}
 
+-(void)transitionScoreToMenu{
+    [self killScore];
+    [self loadMenu];
+}
 
 #pragma mark - Chord Parsing
 
@@ -1633,7 +799,7 @@ void midiInputCallback (const MIDIPacketList *list,
     staffLine.xScale = 0.5;
     staffLine.yScale = 0.5;
     staffLine.position = position;
-    [self addChild:staffLine];
+    [_gameScreenNode addChild:staffLine];
     
 }
 
@@ -1664,7 +830,7 @@ void midiInputCallback (const MIDIPacketList *list,
         noteNode.xScale = 0.5;
         noteNode.yScale = 0.5;
         noteNode.position = position;
-        [self addChild:noteNode];
+        [_gameScreenNode addChild:noteNode];
         
     }
 }
@@ -1676,7 +842,7 @@ void midiInputCallback (const MIDIPacketList *list,
     
     
     //Set the Lowest Note the game will display
-    if (_screenIsLowRange) {
+    if (_currentScreen == kLowRange) {
         if([MIDIUtility getMessageType:midiPacketList] == 0x90)
         {
             _gameData.lowRange = [MIDIUtility getNoteNumber:midiPacketList];
@@ -1684,14 +850,14 @@ void midiInputCallback (const MIDIPacketList *list,
         }
     }
     //Set the Highest Note the game will display
-    else if(_screenIsHighRange) {
+    else if(_currentScreen == kHighRange) {
         if([MIDIUtility getMessageType:midiPacketList] == 0x90){
             _gameData.highRange = [MIDIUtility getNoteNumber:midiPacketList];
             [self transitionHighRangeToGame];
         }
     }
     //Check if note on or note off and call appropriate method
-    else if (_screenIsGame) {
+    else if (_currentScreen == kGame) {
         if([MIDIUtility getMessageType:midiPacketList] == 0x90)
             [self checkNoteHitWithNumber:[MIDIUtility getNoteNumber:midiPacketList]];
         else if ([MIDIUtility getMessageType:midiPacketList] == 0x80)
@@ -1740,12 +906,65 @@ void midiInputCallback (const MIDIPacketList *list,
 
 -(void)checkNoteReleaseWithNumber:(int)userKeyNumber
 {
-    
     [_notePressedFlags removeObjectIdenticalTo:[NSNumber numberWithInt:userKeyNumber]];
-    
 }
 
+/* This function is repsonsible for processing all SpriteButtons and calling the correct screen
+transtion functions */
 
-
+-(void)transition:(NSString *)name{
+    if (_currentScreen == kMenu) {
+        if ([name isEqualToString:@"PlayButton"]) {
+            [self transitionMenuToKey];
+        }
+    }
+    
+    if (_currentScreen == kKey) {
+        if ([name isEqualToString:@"CMajor"]) {
+            _gameData.key = 0;
+            [self transitionKeyToStaff];
+        }
+    }
+    
+    if (_currentScreen == kStaff) {
+        if ([name isEqualToString:@"BassStaff"]) {
+            _gameData.staff = 0;
+            [self transitionStaffToNotes];
+        }
+        else if ([name isEqualToString:@"TrebleStaff"]) {
+            _gameData.staff = 1;
+            [self transitionStaffToNotes];
+        }
+        else if ([name isEqualToString:@"GrandStaff"]) {
+            _gameData.staff = 2;
+            [self transitionStaffToNotes];
+        }
+    }
+    if (_currentScreen == kNotes) {
+        if ([name isEqualToString:@"SingleNotes"]) {
+            _gameData.notes = 0;
+            [self transitionNotesToLowRange];
+        }
+        else if ([name isEqualToString:@"MultipleNotes"]) {
+            _gameData.notes = 1;
+            [self transitionNotesToLowRange];
+        }
+        else if ([name isEqualToString:@"CombinationNotes"]) {
+            _gameData.notes = 2;
+            [self transitionNotesToLowRange];
+        }
+    }
+    
+    if (_currentScreen == kScore) {
+        if ([name isEqualToString:@"RetryButton"]) {
+            [self transitionScoreToGame];
+        }
+        else if ([name isEqualToString:@"ReturnButton"]) {
+            [self transitionScoreToMenu];
+        }
+    }
+    
+    
+}
 
 @end

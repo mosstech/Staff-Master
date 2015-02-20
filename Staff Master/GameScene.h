@@ -7,7 +7,8 @@
 //
 
 #import <SpriteKit/SpriteKit.h>
+#import "SpriteButton.h"
 
-@interface GameScene : SKScene
+@interface GameScene : SKScene <SpriteButtonDelegate>
 
 @end
