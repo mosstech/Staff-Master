@@ -98,19 +98,32 @@ void midiInputCallback (const MIDIPacketList *list,
     [self loadMenu];
     
 }
-
--(void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event{
+-(void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event{
     
-    UITouch *touch = [touches anyObject];
-    CGPoint location = [touch locationInNode:self];
-    SKNode *node = [self nodeAtPoint:location];
-
-    if ([node.name isEqualToString:@"PlayButton"]) {
-        if (((SpriteButton*)node).selected == YES) {
-            [self transitionMenuToKey];
-        }
+    
+    
+    if (_currentScreen == kMenu) {
+        UITouch *touch = [touches anyObject];
+        CGPoint location = [touch locationInNode:self];
+        SKNode *node = [self nodeAtPoint:location];
         
+        if ([node.name isEqualToString:@"MidiDeviceNameLabel"]) {
+            [self cycleMidiDevices];
+            
+        }
     }
+    
+    
+    //used for testing only
+    if (_currentScreen == kLowRange) {
+        _gameData.lowRange = 0;
+        [self transitionLowRangeToHighRange];
+    }
+    else if (_currentScreen == kHighRange){
+        _gameData.highRange = 108;
+        [self transitionHighRangeToGame];
+    }
+    
 }
 
 
@@ -160,7 +173,7 @@ void midiInputCallback (const MIDIPacketList *list,
 
 -(void) didSimulatePhysics{
     
-    //write code for -- dont monitor if not on particular page
+    
     if (_currentScreen == kGame) {
         
         if (_timeRemaining == 0) {
@@ -168,6 +181,7 @@ void midiInputCallback (const MIDIPacketList *list,
         }
         
     }
+    
 }
 
 
@@ -217,6 +231,13 @@ void midiInputCallback (const MIDIPacketList *list,
     _midiDeviceName.position = CGPointMake(0.5*self.size.width, 0.5*bottomPanelNode.size.height - 0.4*_midiDeviceName.fontSize);
     _midiDeviceName.text = _gameData.selectedDevice.name;
     [_menuScreenNode addChild:_midiDeviceName];
+    
+    SKAction *blink = [SKAction sequence:@[
+                                           [SKAction fadeAlphaTo:0.5 duration:1.0],
+                                           [SKAction fadeAlphaTo:1.0 duration:0.5]]];
+    
+    
+    [_midiDeviceName runAction:[SKAction repeatActionForever:blink]];
     
 }
 
