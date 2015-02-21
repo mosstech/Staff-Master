@@ -125,8 +125,9 @@ void midiInputCallback (const MIDIPacketList *list,
     }
     if (_currentScreen == kGame) {
         [self removeGameNotes];
+        _score = _score + 25*(int)_currentNotes.count;
         [self loadNotesFromChord:_chordCatalog[arc4random_uniform((int)_chordCatalog.count - 1)]];
-        _score = _score + 100;
+        
         _scoreNode.text = [NSString stringWithFormat:@"%i",_score];
     }
 }
@@ -671,7 +672,7 @@ void midiInputCallback (const MIDIPacketList *list,
     gameOverLabelNode.fontColor = [UIColor colorWithHue:212.0/360.0 saturation:67.0/100.0 brightness:89.0/100.0 alpha:1.0];
     gameOverLabelNode.text = @"Game Over";
     gameOverLabelNode.position = CGPointMake(0.5*self.size.width, 0.85*self.size.height);
-    [_menuScreenNode addChild:gameOverLabelNode];
+    [_scoreScreenNode addChild:gameOverLabelNode];
     
     SKSpriteNode *scoreBannerNode = [SKSpriteNode spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"ScoreBanner" stringByAppendingString:_deviceSuffix]]];
     scoreBannerNode.name = @"ScoreBanner";
@@ -680,6 +681,15 @@ void midiInputCallback (const MIDIPacketList *list,
     scoreBannerNode.position = CGPointMake(0.5*self.size.width, 0.7*self.size.height);
     [_scoreScreenNode addChild:scoreBannerNode];
     
+    SKLabelNode *scoreLabelNode = [SKLabelNode labelNodeWithFontNamed:@"HelveticaNeue-UltraLight"];
+    scoreLabelNode.Name = @"Score";
+    scoreLabelNode.fontSize = 0.8*scoreBannerNode.size.height;
+    scoreLabelNode.fontColor = [SKColor whiteColor];
+    scoreLabelNode.text = [NSString stringWithFormat:@"Score: %i",_score];
+    scoreLabelNode.position =CGPointMake(0.5*self.size.width, scoreBannerNode.position.y- 0.5*scoreLabelNode.fontSize);
+    [_scoreScreenNode addChild:scoreLabelNode];
+    
+    
     SKSpriteNode *bestBannerNode = [SKSpriteNode spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"BestBanner" stringByAppendingString:_deviceSuffix]]];
     bestBannerNode.name = @"BestBanner";
     bestBannerNode.xScale = 0.5;
@@ -687,6 +697,13 @@ void midiInputCallback (const MIDIPacketList *list,
     bestBannerNode.position = CGPointMake(0.5*self.size.width, scoreBannerNode.position.y - 0.5*scoreBannerNode.size.height - 0.5*bestBannerNode.size.height);
     [_scoreScreenNode addChild:bestBannerNode];
     
+    SKLabelNode *bestLabelNode = [SKLabelNode labelNodeWithFontNamed:@"HelveticaNeue-UltraLight"];
+    bestLabelNode.Name = @"Best";
+    bestLabelNode.fontSize = 0.8*bestBannerNode.size.height;
+    bestLabelNode.fontColor = [SKColor darkGrayColor];
+    bestLabelNode.text = [NSString stringWithFormat:@"Best: %i",_score];
+    bestLabelNode.position =CGPointMake(0.5*self.size.width, bestBannerNode.position.y- 0.5*bestLabelNode.fontSize);
+    [_scoreScreenNode addChild:bestLabelNode];
     
     SpriteButton *retryButtonNode = [SpriteButton spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"RetryButton" stringByAppendingString:_deviceSuffix]]];
     [retryButtonNode setDefaults];
@@ -945,9 +962,11 @@ void midiInputCallback (const MIDIPacketList *list,
     }
 
     if (correctPlay) {
+       
         [self removeGameNotes];
+        _score = _score + 25*(int)_currentNotes.count;
         [self loadNotesFromChord:_chordCatalog[arc4random_uniform((int)_chordCatalog.count - 1)]];
-        _score = _score + 100;
+        
         _scoreNode.text = [NSString stringWithFormat:@"%i",_score];
     }
     
