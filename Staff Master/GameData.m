@@ -52,20 +52,23 @@ static GameData* sharedData = nil;
         midiProperties = (__bridge
                           NSDictionary*)midiPropertiesList;
 
-        if ([[midiProperties valueForKey:@"entities"] count] > 0)
-        {
-            
-            NSDictionary *entities = [[midiProperties valueForKey:@"entities"] objectAtIndex:0];
-            
-            if ([[entities valueForKey:@"sources"] count] > 0) {
+        if ([midiProperties valueForKey:@"offline"] == [NSNumber numberWithInt:0]) {
+            if ([[midiProperties valueForKey:@"entities"] count] > 0)
+            {
                 
-                NSDictionary *sources = [[entities valueForKey:@"sources"] objectAtIndex:0];
-                midiDevice.midiID = [[sources valueForKey:@"uniqueID"] intValue];
-                midiDevice.name = [entities valueForKey:@"name"];
-
-                [midiDevices addObject:midiDevice];
+                NSDictionary *entities = [[midiProperties valueForKey:@"entities"] objectAtIndex:0];
+                
+                if ([[entities valueForKey:@"sources"] count] > 0) {
+                    
+                    NSDictionary *sources = [[entities valueForKey:@"sources"] objectAtIndex:0];
+                    midiDevice.midiID = [[sources valueForKey:@"uniqueID"] intValue];
+                    midiDevice.name = [entities valueForKey:@"name"];
+                    
+                    [midiDevices addObject:midiDevice];
+                }
             }
         }
+        
       
     }
     return midiDevices;

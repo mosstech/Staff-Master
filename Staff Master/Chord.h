@@ -11,7 +11,7 @@
 @interface Chord : NSObject
 
 
-@property (nonatomic, assign)NSString *name;
+@property (strong, nonatomic)NSString *name;
 @property (nonatomic, assign)int variation;
 @property (nonatomic, assign)int inversion;
 @property (nonatomic, assign)int staff;

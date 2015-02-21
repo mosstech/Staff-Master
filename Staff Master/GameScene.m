@@ -123,7 +123,12 @@ void midiInputCallback (const MIDIPacketList *list,
         _gameData.highRange = 108;
         [self transitionHighRangeToGame];
     }
-    
+    if (_currentScreen == kGame) {
+        [self removeGameNotes];
+        [self loadNotesFromChord:_chordCatalog[arc4random_uniform((int)_chordCatalog.count - 1)]];
+        _score = _score + 100;
+        _scoreNode.text = [NSString stringWithFormat:@"%i",_score];
+    }
 }
 
 
@@ -209,11 +214,11 @@ void midiInputCallback (const MIDIPacketList *list,
     NSString *bottomPanelImageName = @"Panel";
     bottomPanelImageName = [bottomPanelImageName stringByAppendingString:_deviceSuffix];
     SKTexture *bottomPanelTexture = [SKTexture textureWithImageNamed:bottomPanelImageName];
-    SpriteButton *bottomPanelNode = [SpriteButton spriteNodeWithTexture:bottomPanelTexture];
-    [bottomPanelNode setDefaults];
+    SKSpriteNode *bottomPanelNode = [SKSpriteNode spriteNodeWithTexture:bottomPanelTexture];
+    bottomPanelNode.xScale = 0.5;
+    bottomPanelNode.yScale = 0.5;
     bottomPanelNode.name = @"BottomPanel";
     bottomPanelNode.position = CGPointMake(0.5*self.size.width, 0.5*bottomPanelNode.size.height);
-    bottomPanelNode.delegate = self;
     [_menuScreenNode addChild:bottomPanelNode];
     
     SKLabelNode *titleLabelNode = [SKLabelNode labelNodeWithFontNamed:@"HelveticaNeue-UltraLight"];
@@ -642,7 +647,7 @@ void midiInputCallback (const MIDIPacketList *list,
 }
 
 -(void)removeGameNotes{
-    [self enumerateChildNodesWithName:@"Note" usingBlock:^(SKNode *node, BOOL *stop){
+    [_gameScreenNode enumerateChildNodesWithName:@"Note" usingBlock:^(SKNode *node, BOOL *stop){
         [node removeFromParent];
     }];
 }
@@ -799,7 +804,7 @@ void midiInputCallback (const MIDIPacketList *list,
                 [notes addObject:note];
             }
             
-            chord.name = [chordDictionary objectForKey:@"Name"];
+            chord.name = [NSString stringWithFormat:@"%@",[chordDictionary objectForKey:@"Name"]];
             chord.staff = [[chordDictionary objectForKey:@"Staff"] intValue];
             chord.variation = [[chordDictionary objectForKey:@"Variation"] intValue];
             chord.inversion = [[chordDictionary objectForKey:@"Inversion"] intValue];
@@ -833,24 +838,49 @@ void midiInputCallback (const MIDIPacketList *list,
     
     
     for (int i =0; i <notes.count; i++) {
-        Note *note = notes[i];
-        CGPoint position;
-        
-        if (note.staff == 0) {
-            position = CGPointMake(0.5*self.size.width, 0.5*note.position*self.size.height/(NUMBER_OF_STAFF_LINES + 1) + 0.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1));
-            //NSLog(@"%i",note.note);
-        }
-        else
-        {
-            position = CGPointMake(0.5*self.size.width, 0.5*(note.position + 16)*self.size.height/(NUMBER_OF_STAFF_LINES + 1) + 0.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1));
-            //NSLog(@"%i",note.note);
-        }
         
         SKSpriteNode *noteNode = [SKSpriteNode spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"Note" stringByAppendingString:_deviceSuffix]]];
+        
+        Note *note = notes[i];
+    
+        int yPosition;
+        int xPosition;
+        
+        if (note.staff == 0) {
+            
+            yPosition =0.5*note.position*self.size.height/(NUMBER_OF_STAFF_LINES + 1) + 0.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1);
+
+        }
+        else if(note.staff == 1)
+        {
+            yPosition =0.5*(note.position + 16)*self.size.height/(NUMBER_OF_STAFF_LINES + 1) + 0.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1);
+        }
+        else{
+            yPosition = 0;
+        }
+        
+        if (i>0) {
+            Note *lastNote = notes[i -1];
+            if (note.position == lastNote.position + 1) {
+                xPosition = 0.5*self.size.width + 0.5*noteNode.size.width;
+            }
+            else{
+                xPosition = 0.5*self.size.width;
+            }
+        }
+        else{
+            xPosition = 0.5*self.size.width;
+        }
+        
+        
+        
+        
+        
+        
         noteNode.name = @"Note";
         noteNode.xScale = 0.5;
         noteNode.yScale = 0.5;
-        noteNode.position = position;
+        noteNode.position = CGPointMake(xPosition, yPosition);
         [_gameScreenNode addChild:noteNode];
         
     }
