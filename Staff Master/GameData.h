@@ -19,6 +19,7 @@
 @property(nonatomic, assign)int highRange;
 @property(nonatomic, retain)NSArray* midiDevices;
 @property(nonatomic, retain)MIDIDevice  *selectedDevice;
+@property(nonatomic, assign)int bestScore;
 
 +(GameData*) sharedData;
 -(void)refreshMidiDevices;

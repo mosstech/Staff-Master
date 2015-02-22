@@ -15,53 +15,57 @@
 #import "SpriteButton.h"
 
 @implementation GameScene
+{
+    int _device;
+    NSString *_deviceSuffix;
+    GameData *_gameData;
+    NSArray *_chordCatalog;
+    AudioController *audioController;
+    NSUserDefaults *_userDefaults;
+    SKNode *_menuScreenNode;
+    SKNode *_keyScreenNode;
+    SKNode *_staffScreenNode;
+    SKNode *_notesScreenNode;
+    SKNode *_lowRangeScreenNode;
+    SKNode *_highRangeScreenNode;
+    SKNode *_gameScreenNode;
+    SKNode *_scoreScreenNode;
+    
+    enum currentScreen {kNothing = 0,
+        kMenu = 1,
+        kKey = 2,
+        kStaff = 3,
+        kNotes = 4,
+        kLowRange = 5,
+        kHighRange = 6,
+        kGame = 7,
+        kScore = 8};
+    
+    enum currentScreen _currentScreen;
+    
+    int _midiDeviceIndex;
+    SKLabelNode *_midiDeviceName;
+    
+    
+    NSMutableArray *_notePressedFlags;
+    NSMutableArray *_fifoMidiEvents;
+    NSArray *_currentNotes;
+    
+    SKLabelNode *_currentNameNode;
+    SKLabelNode *_timeRemainingNode;
+    SKLabelNode *_scoreNode;
+    
+    NSString *_currentName;
+    int _timeRemaining;
+    int _score;
+}
 
 const int NUMBER_OF_STAFF_LINES = 34;
-
 static GameScene *_gameScene;
 
-int _device;
-NSString *_deviceSuffix;
-GameData *_gameData;
-NSArray *_chordCatalog;
-AudioController *audioController;
 
-enum currentScreen {kNothing = 0,
-                    kMenu = 1,
-                    kKey = 2,
-                    kStaff = 3,
-                    kNotes = 4,
-                    kLowRange = 5,
-                    kHighRange = 6,
-                    kGame = 7,
-                    kScore = 8};
 
-SKNode *_menuScreenNode;
-SKNode *_keyScreenNode;
-SKNode *_staffScreenNode;
-SKNode *_notesScreenNode;
-SKNode *_lowRangeScreenNode;
-SKNode *_highRangeScreenNode;
-SKNode *_gameScreenNode;
-SKNode *_scoreScreenNode;
 
-enum currentScreen _currentScreen;
-
-int _midiDeviceIndex;
-SKLabelNode *_midiDeviceName;
-
-//Game
-NSMutableArray *_notePressedFlags;
-NSMutableArray *_fifoMidiEvents;
-NSArray *_currentNotes;
-
-SKLabelNode *_currentNameNode;
-SKLabelNode *_timeRemainingNode;
-SKLabelNode *_scoreNode;
-
-NSString *_currentName;
-int _timeRemaining;
-int _score;
 
 
 
@@ -94,6 +98,9 @@ void midiInputCallback (const MIDIPacketList *list,
     _device = [self device];
     _deviceSuffix = [self deviceSuffix:_device];
    
+    _userDefaults = [NSUserDefaults standardUserDefaults];
+    _gameData.bestScore = (int)[_userDefaults integerForKey:@"BestScore"];
+    
     self.backgroundColor = [UIColor darkGrayColor];
     [self loadMenu];
     
@@ -237,6 +244,22 @@ void midiInputCallback (const MIDIPacketList *list,
     _midiDeviceName.position = CGPointMake(0.5*self.size.width, 0.5*bottomPanelNode.size.height - 0.4*_midiDeviceName.fontSize);
     _midiDeviceName.text = _gameData.selectedDevice.name;
     [_menuScreenNode addChild:_midiDeviceName];
+    
+    
+    SKSpriteNode *bestBannerNode = [SKSpriteNode spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"ScoreBanner" stringByAppendingString:_deviceSuffix]]];
+    bestBannerNode.name = @"BestBanner";
+    bestBannerNode.xScale = 0.5;
+    bestBannerNode.yScale = 0.5;
+    bestBannerNode.position = CGPointMake(0.5*self.size.width, playButtonNode.position.y - 0.5*playButtonNode.size.height - 1.5*bestBannerNode.size.height);
+    [_menuScreenNode addChild:bestBannerNode];
+    
+    SKLabelNode *bestLabelNode = [SKLabelNode labelNodeWithFontNamed:@"HelveticaNeue-UltraLight"];
+    bestLabelNode.Name = @"Best";
+    bestLabelNode.fontSize = 0.8*bestBannerNode.size.height;
+    bestLabelNode.fontColor = [SKColor darkGrayColor];
+    bestLabelNode.text = [NSString stringWithFormat:@"Best: %i",_gameData.bestScore];
+    bestLabelNode.position =CGPointMake(0.5*self.size.width, bestBannerNode.position.y- 0.4*bestLabelNode.fontSize);
+    [_menuScreenNode addChild:bestLabelNode];
     
     SKAction *blink = [SKAction sequence:@[
                                            [SKAction fadeAlphaTo:0.5 duration:1.0],
@@ -651,9 +674,11 @@ void midiInputCallback (const MIDIPacketList *list,
     [_gameScreenNode enumerateChildNodesWithName:@"Note" usingBlock:^(SKNode *node, BOOL *stop){
         [node removeFromParent];
     }];
+    [_gameScreenNode enumerateChildNodesWithName:@"LedgerLine" usingBlock:^(SKNode *node, BOOL *stop){
+        [node removeFromParent];
+    }];
+    
 }
-
-
 
 #pragma mark - Score
 
@@ -661,6 +686,11 @@ void midiInputCallback (const MIDIPacketList *list,
     
     _currentScreen = kScore;
     self.backgroundColor = [UIColor darkGrayColor];
+    
+    if (_score > _gameData.bestScore) {
+        _gameData.bestScore = _score;
+        [_userDefaults setInteger:_score forKey:@"BestScore"];
+    }
     
     _scoreScreenNode = [SKNode node];
     _scoreScreenNode.name = @"ScoreScreenNode";
@@ -686,7 +716,7 @@ void midiInputCallback (const MIDIPacketList *list,
     scoreLabelNode.fontSize = 0.8*scoreBannerNode.size.height;
     scoreLabelNode.fontColor = [SKColor whiteColor];
     scoreLabelNode.text = [NSString stringWithFormat:@"Score: %i",_score];
-    scoreLabelNode.position =CGPointMake(0.5*self.size.width, scoreBannerNode.position.y- 0.5*scoreLabelNode.fontSize);
+    scoreLabelNode.position =CGPointMake(0.5*self.size.width, scoreBannerNode.position.y- 0.4*scoreLabelNode.fontSize);
     [_scoreScreenNode addChild:scoreLabelNode];
     
     
@@ -701,8 +731,8 @@ void midiInputCallback (const MIDIPacketList *list,
     bestLabelNode.Name = @"Best";
     bestLabelNode.fontSize = 0.8*bestBannerNode.size.height;
     bestLabelNode.fontColor = [SKColor darkGrayColor];
-    bestLabelNode.text = [NSString stringWithFormat:@"Best: %i",_score];
-    bestLabelNode.position =CGPointMake(0.5*self.size.width, bestBannerNode.position.y- 0.5*bestLabelNode.fontSize);
+    bestLabelNode.text = [NSString stringWithFormat:@"Best: %i",_gameData.bestScore];
+    bestLabelNode.position =CGPointMake(0.5*self.size.width, bestBannerNode.position.y- 0.4*bestLabelNode.fontSize);
     [_scoreScreenNode addChild:bestLabelNode];
     
     SpriteButton *retryButtonNode = [SpriteButton spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"RetryButton" stringByAppendingString:_deviceSuffix]]];
@@ -846,6 +876,15 @@ void midiInputCallback (const MIDIPacketList *list,
     
 }
 
+-(void)loadLedgerLineWithPosition:(CGPoint)position{
+    SKSpriteNode *ledgerLineNode = [SKSpriteNode spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"LedgerLine" stringByAppendingString:_deviceSuffix]]];
+    ledgerLineNode.name = @"LedgerLine";
+    ledgerLineNode.xScale = 0.5;
+    ledgerLineNode.yScale = 0.5;
+    ledgerLineNode.position = position;
+    [_gameScreenNode addChild:ledgerLineNode];
+}
+
 -(void)loadNotesFromChord:(Chord*)chord{
     
     NSArray *notes = chord.notes;
@@ -860,34 +899,71 @@ void midiInputCallback (const MIDIPacketList *list,
         
         Note *note = notes[i];
     
-        int yPosition;
-        int xPosition;
+        int yPosition = 0;
+        int xPosition = xPosition = 0.5*self.size.width;
         
-        if (note.staff == 0) {
-            
-            yPosition =0.5*note.position*self.size.height/(NUMBER_OF_STAFF_LINES + 1) + 0.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1);
-
-        }
-        else if(note.staff == 1)
-        {
-            yPosition =0.5*(note.position + 16)*self.size.height/(NUMBER_OF_STAFF_LINES + 1) + 0.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1);
-        }
-        else{
-            yPosition = 0;
-        }
         
+        int noteDifference = 0;
+        
+        //shift note to the right to avoid overlap
         if (i>0) {
             Note *lastNote = notes[i -1];
             if (note.position == lastNote.position + 1) {
                 xPosition = 0.5*self.size.width + 0.5*noteNode.size.width;
             }
-            else{
-                xPosition = 0.5*self.size.width;
+            
+        }
+        
+        
+        //Position nodes relative to bass staff
+        if (note.staff == 0) {
+            
+            yPosition =0.5*note.position*self.size.height/(NUMBER_OF_STAFF_LINES + 1) + 0.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1);
+            
+            //Determine how far above or below the note is from the staff
+            if (note.position < 13) {
+                noteDifference = 13 - note.position;
+                int currentLedgerLine = 7;
+                for (int j = 0; j < (noteDifference)/2; j++) {
+                    [self loadLedgerLineWithPosition:CGPointMake(xPosition, (currentLedgerLine - 1)*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+                    currentLedgerLine--;
+                }
+            }
+            else if (note.position > 21){
+                noteDifference = note.position - 21;
+                int currentLedgerLine = 11;
+                for (int j = 0; j < (noteDifference)/2; j++) {
+                    [self loadLedgerLineWithPosition:CGPointMake(xPosition, (currentLedgerLine + 1)*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+                    currentLedgerLine++;
+                }
+            }
+
+        }
+        //Position nodes relative to treble staff
+        else if(note.staff == 1)
+        {
+            yPosition =0.5*(note.position + 16)*self.size.height/(NUMBER_OF_STAFF_LINES + 1) + 0.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1);
+            
+            //Determine how far above or below the note is from the staff
+            if (note.position < 25) {
+                noteDifference = 25 - note.position;
+                int currentLedgerLine = 21;
+                for (int j = 0; j < (noteDifference)/2; j++) {
+                    [self loadLedgerLineWithPosition:CGPointMake(xPosition, (currentLedgerLine - 1)*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+                    currentLedgerLine--;
+                }
+            }
+            else if (note.position > 33){
+                noteDifference = note.position - 33;
+                int currentLedgerLine = 25;
+                for (int j = 0; j < (noteDifference)/2; j++) {
+                    [self loadLedgerLineWithPosition:CGPointMake(xPosition, (currentLedgerLine + 1)*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+                    currentLedgerLine++;
+                }
             }
         }
-        else{
-            xPosition = 0.5*self.size.width;
-        }
+        
+        
         
         
         

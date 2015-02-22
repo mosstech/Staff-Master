@@ -30,6 +30,7 @@ static GameData* sharedData = nil;
         self.highRange = 0;
         self.midiDevices = [self getMidiDevices];
         self.selectedDevice = [self getMidiDevice];
+        self.bestScore = 0;
     }
     return self;
 }
