@@ -3,17 +3,17 @@
     {
       "idiom" : "iphone",
       "scale" : "1x",
-      "filename" : "MultipleNotes_iPhone5.png"
+      "filename" : "MultipleNotesButton_iPhone5.png"
     },
     {
       "idiom" : "iphone",
       "scale" : "2x",
-      "filename" : "MultipleNotes_iPhone5@2x.png"
+      "filename" : "MultipleNotesButton_iPhone5@2x.png"
     },
     {
       "idiom" : "iphone",
       "scale" : "3x",
-      "filename" : "MultipleNotes_iPhone5@3x.png"
+      "filename" : "MultipleNotesButton_iPhone5@3x.png"
     }
   ],
   "info" : {

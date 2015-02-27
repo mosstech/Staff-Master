@@ -1,19 +1,19 @@
 {
   "images" : [
     {
-      "idiom" : "universal",
+      "idiom" : "iphone",
       "scale" : "1x",
-      "filename" : "GrandStaff_iPhone5.png"
+      "filename" : "GrandStaffButton_iPhone5.png"
     },
     {
-      "idiom" : "universal",
+      "idiom" : "iphone",
       "scale" : "2x",
-      "filename" : "GrandStaff_iPhone5@2x.png"
+      "filename" : "GrandStaffButton_iPhone5@2x.png"
     },
     {
-      "idiom" : "universal",
+      "idiom" : "iphone",
       "scale" : "3x",
-      "filename" : "GrandStaff_iPhone5@3x.png"
+      "filename" : "GrandStaffButton_iPhone5@3x.png"
     }
   ],
   "info" : {

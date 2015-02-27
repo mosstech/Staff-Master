@@ -1,19 +1,19 @@
 {
   "images" : [
     {
-      "idiom" : "universal",
+      "idiom" : "iphone",
       "scale" : "1x",
-      "filename" : "TrebleStaff_iPhone5.png"
+      "filename" : "TrebleStaffButton_iPhone5.png"
     },
     {
-      "idiom" : "universal",
+      "idiom" : "iphone",
       "scale" : "2x",
-      "filename" : "TrebleStaff_iPhone5@2x.png"
+      "filename" : "TrebleStaffButton_iPhone5@2x.png"
     },
     {
-      "idiom" : "universal",
+      "idiom" : "iphone",
       "scale" : "3x",
-      "filename" : "TrebleStaff_iPhone5@3x.png"
+      "filename" : "TrebleStaffButton_iPhone5@3x.png"
     }
   ],
   "info" : {
