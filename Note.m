@@ -1,21 +1,21 @@
 //
-//  Chord.m
+//  Note.m
 //  Staff Master
 //
 //  Created by Taylor Moss on 2/28/15.
 //  Copyright (c) 2015 MOSSTECH. All rights reserved.
 //
 
-#import "Chord.h"
 #import "Note.h"
+#import "Chord.h"
 
 
-@implementation Chord
+@implementation Note
 
+@dynamic intonation;
 @dynamic name;
-@dynamic octave;
-@dynamic inversion;
+@dynamic accidental;
 @dynamic staff;
-@dynamic notes;
+@dynamic chord;
 
 @end

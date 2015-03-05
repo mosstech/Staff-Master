@@ -2,21 +2,29 @@
 //  Chord.h
 //  Staff Master
 //
-//  Created by Taylor Moss on 1/29/15.
+//  Created by Taylor Moss on 2/28/15.
 //  Copyright (c) 2015 MOSSTECH. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
+#import <CoreData/CoreData.h>
 
-@interface Chord : NSObject
+@class Note;
 
+@interface Chord : NSManagedObject
 
-@property (strong, nonatomic)NSString *name;
-@property (nonatomic, assign)int variation;
-@property (nonatomic, assign)int inversion;
-@property (nonatomic, assign)int staff;
-@property (strong, nonatomic)NSArray *notes;
+@property (nonatomic, retain) NSString * name;
+@property (nonatomic, retain) NSNumber * octave;
+@property (nonatomic, retain) NSNumber * inversion;
+@property (nonatomic, retain) NSNumber * staff;
+@property (nonatomic, retain) NSSet *notes;
+@end
 
--(id)init;
+@interface Chord (CoreDataGeneratedAccessors)
+
+- (void)addNotesObject:(Note *)value;
+- (void)removeNotesObject:(Note *)value;
+- (void)addNotes:(NSSet *)values;
+- (void)removeNotes:(NSSet *)values;
 
 @end
