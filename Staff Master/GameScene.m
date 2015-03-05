@@ -13,6 +13,7 @@
 #import "AudioUtility.h"
 #import "MIDIUtility.h"
 #import "SpriteButton.h"
+#import "AppDelegate.h"
 
 @implementation GameScene
 {
@@ -49,7 +50,7 @@
     
     NSMutableArray *_notePressedFlags;
     NSMutableArray *_fifoMidiEvents;
-    NSArray *_currentNotes;
+    NSSet *_currentNotes;
     
     SKLabelNode *_currentNameNode;
     SKLabelNode *_timeRemainingNode;
@@ -133,7 +134,8 @@ void midiInputCallback (const MIDIPacketList *list,
     if (_currentScreen == kGame) {
         [self removeGameNotes];
         _score = _score + 25*(int)_currentNotes.count;
-        [self loadNotesFromChord:_chordCatalog[arc4random_uniform((int)_chordCatalog.count - 1)]];
+        
+        [self loadNotesFromChord:_chordCatalog[arc4random_uniform((int)_chordCatalog.count)]];
         
         _scoreNode.text = [NSString stringWithFormat:@"%i",_score];
     }
@@ -232,7 +234,7 @@ void midiInputCallback (const MIDIPacketList *list,
     SKLabelNode *titleLabelNode = [SKLabelNode labelNodeWithFontNamed:@"HelveticaNeue-UltraLight"];
     titleLabelNode.Name = @"TitleLabel";
     titleLabelNode.fontSize = 0.1*self.size.height;
-    titleLabelNode.fontColor = [UIColor colorWithHue:212.0/360.0 saturation:67.0/100.0 brightness:89.0/100.0 alpha:1.0];
+    titleLabelNode.fontColor = [UIColor whiteColor];
     titleLabelNode.text = @"Staff Master";
     titleLabelNode.position = CGPointMake(0.5*self.size.width, 0.8*self.size.height);
     [_menuScreenNode addChild:titleLabelNode];
@@ -256,7 +258,7 @@ void midiInputCallback (const MIDIPacketList *list,
     SKLabelNode *bestLabelNode = [SKLabelNode labelNodeWithFontNamed:@"HelveticaNeue-UltraLight"];
     bestLabelNode.Name = @"Best";
     bestLabelNode.fontSize = 0.8*bestBannerNode.size.height;
-    bestLabelNode.fontColor = [SKColor darkGrayColor];
+    bestLabelNode.fontColor = [SKColor whiteColor];
     bestLabelNode.text = [NSString stringWithFormat:@"Best: %i",_gameData.bestScore];
     bestLabelNode.position =CGPointMake(0.5*self.size.width, bestBannerNode.position.y- 0.4*bestLabelNode.fontSize);
     [_menuScreenNode addChild:bestLabelNode];
@@ -327,15 +329,12 @@ void midiInputCallback (const MIDIPacketList *list,
     _keyScreenNode.name = @"KeyScreenNode";
     [self addChild:_keyScreenNode];
     
-    //This node is a button that switches major key to minor key
-    NSString *majorButtonImageName = @"Major";
-    majorButtonImageName = [majorButtonImageName stringByAppendingString:_deviceSuffix];
-    SKTexture *majorButtonTexture = [SKTexture textureWithImageNamed:majorButtonImageName];
-    SpriteButton *majorButtonNode = [SpriteButton spriteNodeWithTexture:majorButtonTexture];
-    [majorButtonNode setDefaults];
-    majorButtonNode.name = @"MajorButton";
-    majorButtonNode.position = CGPointMake(0.5*self.size.width, 0.5*self.size.height);
-    majorButtonNode.delegate = self;
+    SKLabelNode *majorButtonNode = [SKLabelNode labelNodeWithFontNamed:@"HelveticaNeue-UltraLight"];
+    majorButtonNode.Name = @"Major";
+    majorButtonNode.fontSize = 0.07*self.size.height;
+    majorButtonNode.fontColor =[SKColor whiteColor];
+    majorButtonNode.text = @"Major";
+    majorButtonNode.position = CGPointMake(0.5*self.size.width, 0.5*self.size.height - 0.4*majorButtonNode.fontSize);
     [_keyScreenNode addChild:majorButtonNode];
     
     //calls a function that creates and adds a button for each key
@@ -497,7 +496,7 @@ void midiInputCallback (const MIDIPacketList *list,
     _lowRangeScreenNode.name = @"LowRangeScreenNode";
     [self addChild:_lowRangeScreenNode];
     
-    SKColor *textColor =[UIColor colorWithHue:212.0/360.0 saturation:67.0/100.0 brightness:89.0/100.0 alpha:1.0];
+    SKColor *textColor =[UIColor whiteColor];
     SKLabelNode *lowRangeLabelNode = [SKLabelNode labelNodeWithFontNamed:@"HelveticaNeue-UltraLight"];
     lowRangeLabelNode.Name = @"LowRange";
     lowRangeLabelNode.fontSize = 0.07*self.size.height;
@@ -544,7 +543,7 @@ void midiInputCallback (const MIDIPacketList *list,
     SKLabelNode *highRangeLabelNode = [SKLabelNode labelNodeWithFontNamed:@"HelveticaNeue-UltraLight"];
     highRangeLabelNode.Name = @"HighRange";
     highRangeLabelNode.fontSize = 0.07*self.size.height;
-    highRangeLabelNode.fontColor = [UIColor colorWithHue:212.0/360.0 saturation:67.0/100.0 brightness:89.0/100.0 alpha:1.0];
+    highRangeLabelNode.fontColor = [UIColor whiteColor];
     highRangeLabelNode.text = @"Play Highest Note";
     highRangeLabelNode.position = CGPointMake(0.5*self.size.width, 0.5*self.size.height);
     [_highRangeScreenNode addChild:highRangeLabelNode];
@@ -615,7 +614,7 @@ void midiInputCallback (const MIDIPacketList *list,
     
     _currentNameNode = [SKLabelNode labelNodeWithFontNamed:@"HelveticaNeue-UltraLight"];
     _currentNameNode.name = @"NoteName";
-    _currentNameNode.fontSize = 0.08*self.size.height;
+    _currentNameNode.fontSize = 0.05*self.size.height;
     _currentNameNode.fontColor = [UIColor blackColor];
     _currentNameNode.position = CGPointMake(0.95*self.size.width, 0.05*self.size.height);
     _currentNameNode.horizontalAlignmentMode = SKLabelHorizontalAlignmentModeRight;
@@ -677,7 +676,9 @@ void midiInputCallback (const MIDIPacketList *list,
     [_gameScreenNode enumerateChildNodesWithName:@"LedgerLine" usingBlock:^(SKNode *node, BOOL *stop){
         [node removeFromParent];
     }];
-    
+    [_gameScreenNode enumerateChildNodesWithName:@"Accidental" usingBlock:^(SKNode *node, BOOL *stop){
+        [node removeFromParent];
+    }];
 }
 
 #pragma mark - Score
@@ -699,7 +700,7 @@ void midiInputCallback (const MIDIPacketList *list,
     SKLabelNode *gameOverLabelNode = [SKLabelNode labelNodeWithFontNamed:@"HelveticaNeue-UltraLight"];
     gameOverLabelNode.Name = @"GameOver";
     gameOverLabelNode.fontSize = 0.1*self.size.height;
-    gameOverLabelNode.fontColor = [UIColor colorWithHue:212.0/360.0 saturation:67.0/100.0 brightness:89.0/100.0 alpha:1.0];
+    gameOverLabelNode.fontColor = [UIColor whiteColor];
     gameOverLabelNode.text = @"Game Over";
     gameOverLabelNode.position = CGPointMake(0.5*self.size.width, 0.85*self.size.height);
     [_scoreScreenNode addChild:gameOverLabelNode];
@@ -730,7 +731,7 @@ void midiInputCallback (const MIDIPacketList *list,
     SKLabelNode *bestLabelNode = [SKLabelNode labelNodeWithFontNamed:@"HelveticaNeue-UltraLight"];
     bestLabelNode.Name = @"Best";
     bestLabelNode.fontSize = 0.8*bestBannerNode.size.height;
-    bestLabelNode.fontColor = [SKColor darkGrayColor];
+    bestLabelNode.fontColor = [SKColor whiteColor];
     bestLabelNode.text = [NSString stringWithFormat:@"Best: %i",_gameData.bestScore];
     bestLabelNode.position =CGPointMake(0.5*self.size.width, bestBannerNode.position.y- 0.4*bestLabelNode.fontSize);
     [_scoreScreenNode addChild:bestLabelNode];
@@ -781,15 +782,38 @@ void midiInputCallback (const MIDIPacketList *list,
 -(void)buildChordCatalog{
     NSArray *chordArray;
     
+    
     switch (_gameData.key) {
         case 0:
-            chordArray = [self arrayFromPropertyList:[[NSBundle mainBundle] pathForResource:@"Chords0" ofType:@"plist"]] ;
+       
+            chordArray = [self chordsFromJSON];
+
             _chordCatalog = [self chordCatalogFromChordArray:chordArray];
+           
+            
+            
+    
             break;
             
         default:NSLog(@"Error selecting chord");
             break;
     }
+    
+}
+
+-(NSArray*)chordsFromJSON{
+    
+    id delegate = [[UIApplication sharedApplication] delegate];
+    
+    NSManagedObjectContext *context = [delegate managedObjectContext];
+    
+    NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] init];
+    NSEntityDescription *entity = [NSEntityDescription entityForName:@"Chord"
+                                              inManagedObjectContext:context];
+    [fetchRequest setEntity:entity];
+    NSArray *fetchedObjects = [context executeFetchRequest:fetchRequest error:nil];
+    
+    return fetchedObjects;
     
 }
 
@@ -799,71 +823,50 @@ void midiInputCallback (const MIDIPacketList *list,
     
 }
 
+-(bool)chordInBounds:(Chord*)chord{
+    NSSet *notes = chord.notes;
+    bool inBounds = NO;
+    for (Note *note in notes) {
+        if ([note midiNumber] < _gameData.lowRange) {
+            inBounds = NO;
+            break;
+        }
+        else if([note midiNumber] > _gameData.highRange) {
+            inBounds = NO;
+            break;
+        }
+        else{
+            inBounds = YES;
+        }
+    }
+    return inBounds;
+}
+
 -(NSArray *)chordCatalogFromChordArray:(NSArray*)chordArray{
     
-    NSMutableArray *chordCatalog;
-    chordCatalog = [[NSMutableArray alloc]init];
-    
-    for (int i =0; i < chordArray.count; i++) {
-        
-        bool includeChord = NO;
-        
-        NSDictionary *chordDictionary = chordArray[i];
-        NSArray *notesArray = [chordDictionary objectForKey:@"Notes"];
-        
-        
-        if (_gameData.staff == [[chordDictionary objectForKey:@"Staff"] intValue] || _gameData.staff == 2) {
-        
-            for (int j = 0; j < notesArray.count; j++) {
-                
-                NSDictionary *noteDictionary = notesArray[j];
-                
-                if ([[noteDictionary objectForKey:@"Note"] intValue] < _gameData.lowRange) {
-                    includeChord = NO;
-                    break;
-                }
-                else if([[noteDictionary objectForKey:@"Note"] intValue] > _gameData.highRange) {
-                    includeChord = NO;
-                    break;
-                }
-                else{
-                    includeChord = YES;
-                }
-            }
+    NSMutableArray *chordCatalog = [NSMutableArray arrayWithArray:chordArray];
+   
+    for (Chord *chord in chordCatalog) {
+        //Filter out chords in other keys
+        if ([chord.key intValue] != _gameData.key) {
+            [chordCatalog removeObject:chord];
         }
-        
-        if (includeChord == YES) {
-            
-            Chord *chord = [[Chord alloc]init];
-
-            
-            NSMutableArray *notes = [[NSMutableArray alloc]init];
-            
-            for (int j = 0; j < notesArray.count; j++) {
-                NSDictionary *noteDictionary = notesArray[j];
-                
-                Note *note = [[Note alloc]init];
-                note.note = [[noteDictionary objectForKey:@"Note"] intValue];
-                note.position = [[noteDictionary objectForKey:@"Position"] intValue];
-                note.symbol = [[noteDictionary objectForKey:@"Symbol"] intValue];
-                note.staff = [[noteDictionary objectForKey:@"Staff"] intValue];
-            
-                [notes addObject:note];
+        else{
+            //Filter out chords on other staff
+            if ( _gameData.staff != 2 && ([chord.staff intValue] != _gameData.staff)) {
+                [chordCatalog removeObject:chord];
             }
-            
-            chord.name = [NSString stringWithFormat:@"%@",[chordDictionary objectForKey:@"Name"]];
-            chord.staff = [[chordDictionary objectForKey:@"Staff"] intValue];
-            chord.variation = [[chordDictionary objectForKey:@"Variation"] intValue];
-            chord.inversion = [[chordDictionary objectForKey:@"Inversion"] intValue];
-            chord.notes = notes;
-            
-            [chordCatalog addObject:chord];
+            else{
+                //Filter out chords outside of bounds
+                if (![self chordInBounds:chord]) {
+                    [chordCatalog removeObject:chord];
+                }
+            }
             
         }
     }
     
     return chordCatalog;
-    
 }
 
 -(void)loadStaffLineWithPosition:(CGPoint)position{
@@ -887,95 +890,174 @@ void midiInputCallback (const MIDIPacketList *list,
 
 -(void)loadNotesFromChord:(Chord*)chord{
     
-    NSArray *notes = chord.notes;
+    
+    NSSet *notes = chord.notes;
+    
     _currentNotes = notes;
     _currentName = chord.name;
     _currentNameNode.text = _currentName;
     
     
-    for (int i =0; i <notes.count; i++) {
-        
-        SKSpriteNode *noteNode = [SKSpriteNode spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"Note" stringByAppendingString:_deviceSuffix]]];
-        
-        Note *note = notes[i];
     
-        int yPosition = 0;
-        int xPosition = xPosition = 0.5*self.size.width;
-        
-        
-        int noteDifference = 0;
-        
-        //shift note to the right to avoid overlap
-        if (i>0) {
-            Note *lastNote = notes[i -1];
-            if (note.position == lastNote.position + 1) {
-                xPosition = 0.5*self.size.width + 0.5*noteNode.size.width;
-            }
-            
-        }
-        
-        
-        //Position nodes relative to bass staff
-        if (note.staff == 0) {
-            
-            yPosition =0.5*note.position*self.size.height/(NUMBER_OF_STAFF_LINES + 1) + 0.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1);
-            
-            //Determine how far above or below the note is from the staff
-            if (note.position < 13) {
-                noteDifference = 13 - note.position;
-                int currentLedgerLine = 7;
-                for (int j = 0; j < (noteDifference)/2; j++) {
-                    [self loadLedgerLineWithPosition:CGPointMake(xPosition, (currentLedgerLine - 1)*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
-                    currentLedgerLine--;
-                }
-            }
-            else if (note.position > 21){
-                noteDifference = note.position - 21;
-                int currentLedgerLine = 11;
-                for (int j = 0; j < (noteDifference)/2; j++) {
-                    [self loadLedgerLineWithPosition:CGPointMake(xPosition, (currentLedgerLine + 1)*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
-                    currentLedgerLine++;
-                }
-            }
+    
+    for (Note *note in notes) {
 
+        [self addNote:note fromChord:chord];
+        if ([note.accidental intValue] == 1) {
+            [self addAccidentalForNote:note fromChord:chord];
         }
-        //Position nodes relative to treble staff
-        else if(note.staff == 1)
-        {
-            yPosition =0.5*(note.position + 16)*self.size.height/(NUMBER_OF_STAFF_LINES + 1) + 0.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1);
-            
-            //Determine how far above or below the note is from the staff
-            if (note.position < 25) {
-                noteDifference = 25 - note.position;
-                int currentLedgerLine = 21;
-                for (int j = 0; j < (noteDifference)/2; j++) {
-                    [self loadLedgerLineWithPosition:CGPointMake(xPosition, (currentLedgerLine - 1)*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
-                    currentLedgerLine--;
-                }
-            }
-            else if (note.position > 33){
-                noteDifference = note.position - 33;
-                int currentLedgerLine = 25;
-                for (int j = 0; j < (noteDifference)/2; j++) {
-                    [self loadLedgerLineWithPosition:CGPointMake(xPosition, (currentLedgerLine + 1)*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
-                    currentLedgerLine++;
-                }
-            }
-        }
-        
-        
-        
-        
-        
-        
-        
-        
-        noteNode.name = @"Note";
-        noteNode.xScale = 0.5;
-        noteNode.yScale = 0.5;
-        noteNode.position = CGPointMake(xPosition, yPosition);
-        [_gameScreenNode addChild:noteNode];
-        
+  
+    }
+    [self addLedgerLinesForChord:chord];
+    
+}
+
+-(void)addNote:(Note*)note fromChord:(Chord*)chord{
+    
+    //Determine y position based on staff
+    int yPosition = [self noteYPositionFromStaffLocation:[note staffLocation] forStaff:[note.staff intValue]];
+    
+    //Determine x position based on whether the note is shifted to prevent overlap
+    int xPosition;
+    if(![chord noteOverlapForNote:note]){
+        xPosition = 0.5*self.size.width;
+    }
+    else{
+        xPosition = 0.553*self.size.width;
+    }
+    
+    //Create Note node
+    SKSpriteNode *noteNode = [SKSpriteNode spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"Note" stringByAppendingString:_deviceSuffix]]];
+    noteNode.name = @"Note";
+    noteNode.xScale = 0.5;
+    noteNode.yScale = 0.5;
+    noteNode.position = CGPointMake(xPosition, yPosition);
+    [_gameScreenNode addChild:noteNode];
+    
+}
+
+/*Determines the Y-Position for a note based on the staff
+ location number */
+-(int)noteYPositionFromStaffLocation:(int)staffLocation forStaff:(int)staff
+{
+    //Position nodes relative to bass staff
+    if (staff == 0) {
+        return 0.5*staffLocation*self.size.height/(NUMBER_OF_STAFF_LINES + 1) + 0.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1);
+    }
+    //Position nodes relative to treble staff
+    else if(staff == 1)
+    {
+        return 0.5*(staffLocation + 16)*self.size.height/(NUMBER_OF_STAFF_LINES + 1) + 0.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1);
+    }
+    else{
+        NSLog(@"Error: Failed to determine staff location");
+        return 0;
+    }
+}
+
+-(void)addAccidentalForNote:(Note*)note fromChord:(Chord*)chord{
+
+    
+    //Add accidental symbol to note
+
+    NSString *accidental;
+    CGPoint accidentalAnchor;
+
+    switch ([note.intonation intValue]) {
+        case -2:
+            accidental = @"DoubleFlat";
+            accidentalAnchor = CGPointMake(0.5, 0.3);
+            break;
+        case -1:
+            accidental = @"Flat";
+            accidentalAnchor = CGPointMake(0.5, 0.3);
+            break;
+        case 0:
+            accidental = @"Natural";
+            accidentalAnchor = CGPointMake(0.5, 0.5);
+            break;
+        case 1:
+            accidental = @"Sharp";
+            accidentalAnchor = CGPointMake(0.5, 0.5);
+            break;
+        case 2:
+            accidental = @"DoubleSharp";
+            accidentalAnchor = CGPointMake(0.5, 0.5);
+            break;
+        default:
+            accidental = @"Natural";
+            accidentalAnchor = CGPointMake(0.5, 0.5);
+            NSLog(@"Error: Accidental symbol not found");
+            break;
+    }
+ 
+    //Create Accidental node
+    SKSpriteNode *accidentalNode = [SKSpriteNode spriteNodeWithTexture:[SKTexture textureWithImageNamed:[accidental stringByAppendingString:_deviceSuffix]]];
+    accidentalNode.name = @"Accidental";
+    accidentalNode.xScale = 0.5;
+    accidentalNode.yScale = 0.5;
+    accidentalNode.anchorPoint = accidentalAnchor;
+    
+    //Determine y position based on staff
+    int yPosition = [self noteYPositionFromStaffLocation:[note staffLocation] forStaff:[note.staff intValue]];
+    
+    int xPosition;
+    if(![chord accidentalOverlapForNote:note]){
+        xPosition = 0.5*self.size.width - 0.12*self.size.width;
+    }
+    else{
+        xPosition = 0.5*self.size.width - 0.22*self.size.width;
+    }
+    
+    accidentalNode.position = CGPointMake(xPosition, yPosition);
+    [_gameScreenNode addChild:accidentalNode];
+}
+
+-(void)addLedgerLinesForChord:(Chord*)chord{
+
+    int currentLedgerLine;
+    //Add ledger lines for notes below bass clef
+    currentLedgerLine = 7;
+    for (int j = 0; j < [chord centeredLedgerLinesBelowBassClef]/2; j++) {
+        [self loadLedgerLineWithPosition:CGPointMake(0.5*self.size.width, (currentLedgerLine - 1)*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+        currentLedgerLine--;
+    }
+    for (int j = 0; j < [chord shiftedLedgerLinesBelowBassClef]/2; j++) {
+        [self loadLedgerLineWithPosition:CGPointMake(0.553*self.size.width, (currentLedgerLine - 1)*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+        currentLedgerLine--;
+    }
+    
+    //Add ledger lines for notes above bass clef
+    currentLedgerLine = 11;
+    for (int j = 0; j < ([chord centeredLedgerLinesAboveBassClef])/2; j++) {
+        [self loadLedgerLineWithPosition:CGPointMake(0.5*self.size.width, (currentLedgerLine + 1)*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+        currentLedgerLine++;
+    }
+    for (int j = 0; j < ([chord shiftedLedgerLinesAboveBassClef])/2; j++) {
+        [self loadLedgerLineWithPosition:CGPointMake(0.553*self.size.width, (currentLedgerLine + 1)*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+        currentLedgerLine++;
+    }
+    
+    //Add ledger lines for notes below treble clef
+    currentLedgerLine = 21;
+    for (int j = 0; j < ([chord centeredLedgerLinesBelowTrebleClef])/2; j++) {
+        [self loadLedgerLineWithPosition:CGPointMake(0.5*self.size.width, (currentLedgerLine - 1)*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+        currentLedgerLine--;
+    }
+    for (int j = 0; j < ([chord shiftedLedgerLinesBelowTrebleClef])/2; j++) {
+        [self loadLedgerLineWithPosition:CGPointMake(0.553*self.size.width, (currentLedgerLine - 1)*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+        currentLedgerLine--;
+    }
+    
+    //Add ledger lines for notes above treble clef
+    currentLedgerLine = 25;
+    for (int j = 0; j < ([chord centeredLedgerLinesAboveTrebleClef])/2; j++) {
+        [self loadLedgerLineWithPosition:CGPointMake(0.5*self.size.width, (currentLedgerLine + 1)*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+        currentLedgerLine++;
+    }
+    for (int j = 0; j < ([chord centeredLedgerLinesAboveTrebleClef])/2; j++) {
+        [self loadLedgerLineWithPosition:CGPointMake(0.553*self.size.width, (currentLedgerLine + 1)*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+        currentLedgerLine++;
     }
 }
 
@@ -1018,11 +1100,10 @@ void midiInputCallback (const MIDIPacketList *list,
     
     bool correctPlay = NO;
     
-    for (int i = 0; i < (int)_currentNotes.count; i++) {
+    for (Note * note in _currentNotes) {
         correctPlay = NO;
-        Note *note = _currentNotes[i];
         for (int j = 0; j < (int)_notePressedFlags.count; j++) {
-            if (note.note == [_notePressedFlags[j] intValue]) {
+            if ([note midiNumber] == [_notePressedFlags[j] intValue]) {
                 correctPlay = YES;
                 break;
             }
@@ -1049,6 +1130,8 @@ void midiInputCallback (const MIDIPacketList *list,
     
     
 }
+
+
 
 -(void)checkNoteReleaseWithNumber:(int)userKeyNumber
 {

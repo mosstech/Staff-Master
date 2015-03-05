@@ -14,9 +14,12 @@
 @interface Note : NSManagedObject
 
 @property (nonatomic, retain) NSNumber * intonation;
+@property (nonatomic, retain) NSNumber * octave;
 @property (nonatomic, retain) NSString * name;
 @property (nonatomic, retain) NSNumber * accidental;
 @property (nonatomic, retain) NSNumber * staff;
 @property (nonatomic, retain) Chord *chord;
 
+-(int)midiNumber;
+-(int)staffLocation;
 @end

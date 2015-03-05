@@ -2,6 +2,7 @@
 <model userDefinedModelVersionIdentifier="" type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="6254" systemVersion="14C109" minimumToolsVersion="Xcode 4.3" macOSVersion="Automatic" iOSVersion="Automatic">
     <entity name="Chord" representedClassName="Chord" syncable="YES">
         <attribute name="inversion" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+        <attribute name="key" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
         <attribute name="name" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="octave" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
         <attribute name="staff" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
@@ -16,7 +17,7 @@
         <relationship name="chord" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Chord" inverseName="notes" inverseEntity="Chord" syncable="YES"/>
     </entity>
     <elements>
-        <element name="Chord" positionX="-54" positionY="254" width="128" height="118"/>
+        <element name="Chord" positionX="-54" positionY="254" width="128" height="133"/>
         <element name="Note" positionX="162" positionY="275" width="128" height="133"/>
     </elements>
 </model>
