@@ -78,10 +78,13 @@
     // Create the coordinator and store
     
     _persistentStoreCoordinator = [[NSPersistentStoreCoordinator alloc] initWithManagedObjectModel:[self managedObjectModel]];
-    NSURL *storeURL = [[self applicationDocumentsDirectory] URLByAppendingPathComponent:@"Test.sqlite"];
+    NSURL *storeURL = [[self applicationDocumentsDirectory] URLByAppendingPathComponent:@"Chords.sqlite"];
+    NSLog(@"%@", storeURL);
+    
     
     if (![[NSFileManager defaultManager] fileExistsAtPath:[storeURL path]]) {
         NSURL *preloadURL = [NSURL fileURLWithPath:[[NSBundle mainBundle] pathForResource:@"Chords" ofType:@"sqlite"]];
+        
         NSError* err = nil;
         
         if (![[NSFileManager defaultManager] copyItemAtURL:preloadURL toURL:storeURL error:&err]) {

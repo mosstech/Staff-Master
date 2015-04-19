@@ -16,6 +16,7 @@
 #import "AppDelegate.h"
 
 @implementation GameScene
+
 {
     int _device;
     NSString *_deviceSuffix;
@@ -31,6 +32,7 @@
     SKNode *_highRangeScreenNode;
     SKNode *_gameScreenNode;
     SKNode *_scoreScreenNode;
+    SKNode *_pausedScreenNode;
     
     enum currentScreen {kNothing = 0,
         kMenu = 1,
@@ -59,16 +61,14 @@
     NSString *_currentName;
     int _timeRemaining;
     int _score;
+    
+    int _chordCatalogIncrementer;
 }
+
+const bool DEBUG_MODE = YES;
 
 const int NUMBER_OF_STAFF_LINES = 34;
 static GameScene *_gameScene;
-
-
-
-
-
-
 
 
 static inline CGPoint rotatedPosition(CGPoint startPosition, float distance, float radians){
@@ -84,8 +84,14 @@ void midiInputCallback (const MIDIPacketList *list,
                         void *procRef,
                         void *srcRef)
 {
-    [_gameScene handlePacketList:list];
-    [MIDIUtility processMessage:list];
+    if (![_gameScene gameIsPaused]) {
+        [_gameScene handlePacketList:list];
+        [MIDIUtility processMessage:list];
+    }
+}
+
+-(bool)gameIsPaused{
+    return _gameData.isPaused;
 }
 
 -(void)didMoveToView:(SKView *)view {
@@ -101,8 +107,9 @@ void midiInputCallback (const MIDIPacketList *list,
    
     _userDefaults = [NSUserDefaults standardUserDefaults];
     _gameData.bestScore = (int)[_userDefaults integerForKey:@"BestScore"];
+   
+    _chordCatalogIncrementer = 0;
     
-    self.backgroundColor = [UIColor darkGrayColor];
     [self loadMenu];
     
 }
@@ -123,22 +130,31 @@ void midiInputCallback (const MIDIPacketList *list,
     
     
     //used for testing only
-    if (_currentScreen == kLowRange) {
-        _gameData.lowRange = 0;
-        [self transitionLowRangeToHighRange];
+    if (DEBUG_MODE) {
+        if (_currentScreen == kLowRange) {
+            _gameData.lowRange = 0;
+            [self transitionLowRangeToHighRange];
+        }
+        else if (_currentScreen == kHighRange){
+            _gameData.highRange = 108;
+            [self transitionHighRangeToGame];
+        }
+        if (_currentScreen == kGame && !_gameData.isPaused) {
+            [self removeGameNotes];
+            _score = _score + 25*(int)_currentNotes.count;
+            
+            if (_chordCatalogIncrementer < _chordCatalog.count) {
+                [self loadNotesFromChord:_chordCatalog[_chordCatalogIncrementer]];
+                _chordCatalogIncrementer++;
+            }
+            else{
+                _chordCatalogIncrementer = 0;
+            }
+            
+            _scoreNode.text = [NSString stringWithFormat:@"%i",_score];
+        }
     }
-    else if (_currentScreen == kHighRange){
-        _gameData.highRange = 108;
-        [self transitionHighRangeToGame];
-    }
-    if (_currentScreen == kGame) {
-        [self removeGameNotes];
-        _score = _score + 25*(int)_currentNotes.count;
-        
-        [self loadNotesFromChord:_chordCatalog[arc4random_uniform((int)_chordCatalog.count)]];
-        
-        _scoreNode.text = [NSString stringWithFormat:@"%i",_score];
-    }
+    
 }
 
 
@@ -206,7 +222,7 @@ void midiInputCallback (const MIDIPacketList *list,
 -(void)loadMenu{
     
     _currentScreen = kMenu;
-    
+    self.backgroundColor = [UIColor darkGrayColor];
     _menuScreenNode = [SKNode node];
     _menuScreenNode.name = @"MenuScreenNode";
     [self addChild:_menuScreenNode];
@@ -232,7 +248,7 @@ void midiInputCallback (const MIDIPacketList *list,
     [_menuScreenNode addChild:bottomPanelNode];
     
     SKLabelNode *titleLabelNode = [SKLabelNode labelNodeWithFontNamed:@"HelveticaNeue-UltraLight"];
-    titleLabelNode.Name = @"TitleLabel";
+    titleLabelNode.name = @"TitleLabel";
     titleLabelNode.fontSize = 0.1*self.size.height;
     titleLabelNode.fontColor = [UIColor whiteColor];
     titleLabelNode.text = @"Staff Master";
@@ -256,7 +272,7 @@ void midiInputCallback (const MIDIPacketList *list,
     [_menuScreenNode addChild:bestBannerNode];
     
     SKLabelNode *bestLabelNode = [SKLabelNode labelNodeWithFontNamed:@"HelveticaNeue-UltraLight"];
-    bestLabelNode.Name = @"Best";
+    bestLabelNode.name = @"Best";
     bestLabelNode.fontSize = 0.8*bestBannerNode.size.height;
     bestLabelNode.fontColor = [SKColor whiteColor];
     bestLabelNode.text = [NSString stringWithFormat:@"Best: %i",_gameData.bestScore];
@@ -298,13 +314,8 @@ void midiInputCallback (const MIDIPacketList *list,
 
 
 -(void)killMenu{
-    
-    [self enumerateChildNodesWithName:@"MenuScreenNode" usingBlock:^(SKNode *node, BOOL *stop){
-        [node removeAllChildren];
-    }];
-    [self enumerateChildNodesWithName:@"MenuScreenNode" usingBlock:^(SKNode *node, BOOL *stop){
-        [node removeFromParent];
-    }];
+    [_menuScreenNode removeAllChildren];
+    [self removeAllChildren];
 }
 
 -(void)transitionMenuToKey{
@@ -330,12 +341,20 @@ void midiInputCallback (const MIDIPacketList *list,
     [self addChild:_keyScreenNode];
     
     SKLabelNode *majorButtonNode = [SKLabelNode labelNodeWithFontNamed:@"HelveticaNeue-UltraLight"];
-    majorButtonNode.Name = @"Major";
+    majorButtonNode.name = @"Major";
     majorButtonNode.fontSize = 0.07*self.size.height;
     majorButtonNode.fontColor =[SKColor whiteColor];
     majorButtonNode.text = @"Major";
     majorButtonNode.position = CGPointMake(0.5*self.size.width, 0.5*self.size.height - 0.4*majorButtonNode.fontSize);
     [_keyScreenNode addChild:majorButtonNode];
+    
+    SpriteButton *backButton = [SpriteButton spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"BackButton" stringByAppendingString:_deviceSuffix]]];
+    [backButton setDefaults];
+    backButton.name = @"BackButton";
+    backButton.position = CGPointMake(0.5*backButton.size.width + 0.5*backButton.size.height, backButton.size.height);
+    backButton.delegate = self;
+    [_keyScreenNode addChild:backButton];
+   
     
     //calls a function that creates and adds a button for each key
     [self loadKeyNodeWithName:@"CMajor" andRotation:-0*M_PI/6];
@@ -373,17 +392,18 @@ void midiInputCallback (const MIDIPacketList *list,
 
 -(void)killKey{
     
-    [self enumerateChildNodesWithName:@"KeyScreenNode" usingBlock:^(SKNode *node, BOOL *stop){
-        [node removeAllChildren];
-    }];
-    [self enumerateChildNodesWithName:@"KeyScreenNode" usingBlock:^(SKNode *node, BOOL *stop){
-        [node removeFromParent];
-    }];
+    [_keyScreenNode removeAllChildren];
+    [self removeAllChildren];
 }
 
 -(void)transitionKeyToStaff{
     [self killKey];
     [self loadStaff];
+}
+
+-(void)transitionKeyToMenu{
+    [self killKey];
+    [self loadMenu];
 }
 
 #pragma mark - Staff
@@ -420,20 +440,29 @@ void midiInputCallback (const MIDIPacketList *list,
     grandStaffButtonNode.delegate = self;
     [_staffScreenNode addChild:grandStaffButtonNode];
     
+    SpriteButton *backButton = [SpriteButton spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"BackButton" stringByAppendingString:_deviceSuffix]]];
+    [backButton setDefaults];
+    backButton.name = @"BackButton";
+    backButton.position = CGPointMake(0.5*backButton.size.width + 0.5*backButton.size.height, backButton.size.height);
+    backButton.delegate = self;
+    [_staffScreenNode addChild:backButton];
+    
 }
 
 -(void)killStaff{
-    [self enumerateChildNodesWithName:@"StaffScreenNode" usingBlock:^(SKNode *node, BOOL *stop){
-        [node removeAllChildren];
-    }];
-    [self enumerateChildNodesWithName:@"StaffScreenNode" usingBlock:^(SKNode *node, BOOL *stop){
-        [node removeFromParent];
-    }];
+    
+    [_staffScreenNode removeAllChildren];
+    [self removeAllChildren];
 }
 
 -(void)transitionStaffToNotes{
     [self killStaff];
     [self loadNotes];
+}
+
+-(void)transitionStaffToKey{
+    [self killStaff];
+    [self loadKey];
 }
 
 #pragma mark - Notes
@@ -469,21 +498,29 @@ void midiInputCallback (const MIDIPacketList *list,
     combinationNotesButtonNode.delegate = self;
     [_notesScreenNode addChild:combinationNotesButtonNode];
     
+    SpriteButton *backButton = [SpriteButton spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"BackButton" stringByAppendingString:_deviceSuffix]]];
+    [backButton setDefaults];
+    backButton.name = @"BackButton";
+    backButton.position = CGPointMake(0.5*backButton.size.width + 0.5*backButton.size.height, backButton.size.height);
+    backButton.delegate = self;
+    [_notesScreenNode addChild:backButton];
+    
 }
 
 -(void)killNotes{
     
-    [self enumerateChildNodesWithName:@"NotesScreenNode" usingBlock:^(SKNode *node, BOOL *stop){
-        [node removeAllChildren];
-    }];
-    [self enumerateChildNodesWithName:@"NotesScreenNode" usingBlock:^(SKNode *node, BOOL *stop){
-        [node removeFromParent];
-    }];
+    [_notesScreenNode removeAllChildren];
+    [self removeAllChildren];
 }
 
 -(void)transitionNotesToLowRange{
     [self killNotes];
     [self loadLowRange];
+}
+
+-(void)transitionNotesToStaff{
+    [self killNotes];
+    [self loadStaff];
 }
 
 #pragma mark - Range
@@ -498,12 +535,19 @@ void midiInputCallback (const MIDIPacketList *list,
     
     SKColor *textColor =[UIColor whiteColor];
     SKLabelNode *lowRangeLabelNode = [SKLabelNode labelNodeWithFontNamed:@"HelveticaNeue-UltraLight"];
-    lowRangeLabelNode.Name = @"LowRange";
+    lowRangeLabelNode.name = @"LowRange";
     lowRangeLabelNode.fontSize = 0.07*self.size.height;
     lowRangeLabelNode.fontColor =textColor;
     lowRangeLabelNode.text = @"Play Lowest Note";
     lowRangeLabelNode.position = CGPointMake(0.5*self.size.width, 0.5*self.size.height);
     [_lowRangeScreenNode addChild:lowRangeLabelNode];
+    
+    SpriteButton *backButton = [SpriteButton spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"BackButton" stringByAppendingString:_deviceSuffix]]];
+    [backButton setDefaults];
+    backButton.name = @"BackButton";
+    backButton.position = CGPointMake(0.5*backButton.size.width + 0.5*backButton.size.height, backButton.size.height);
+    backButton.delegate = self;
+    [_lowRangeScreenNode addChild:backButton];
     
     SKAction *blink = [SKAction sequence:@[
                                            [SKAction fadeAlphaTo:0.5 duration:1.0],
@@ -517,12 +561,8 @@ void midiInputCallback (const MIDIPacketList *list,
 
 -(void)killLowRange{
     
-    [self enumerateChildNodesWithName:@"LowRangeScreenNode" usingBlock:^(SKNode *node, BOOL *stop){
-        [node removeAllChildren];
-    }];
-    [self enumerateChildNodesWithName:@"LowRangeScreenNode" usingBlock:^(SKNode *node, BOOL *stop){
-        [node removeFromParent];
-    }];
+    [_lowRangeScreenNode removeAllChildren];
+    [self removeAllChildren];
     
 
 }
@@ -530,6 +570,11 @@ void midiInputCallback (const MIDIPacketList *list,
 -(void)transitionLowRangeToHighRange{
     [self killLowRange];
     [self loadHighRange];
+}
+
+-(void)transitionLowRangeToNotes{
+    [self killLowRange];
+    [self loadNotes];
 }
 
 -(void)loadHighRange{
@@ -541,12 +586,19 @@ void midiInputCallback (const MIDIPacketList *list,
     [self addChild:_highRangeScreenNode];
     
     SKLabelNode *highRangeLabelNode = [SKLabelNode labelNodeWithFontNamed:@"HelveticaNeue-UltraLight"];
-    highRangeLabelNode.Name = @"HighRange";
+    highRangeLabelNode.name = @"HighRange";
     highRangeLabelNode.fontSize = 0.07*self.size.height;
     highRangeLabelNode.fontColor = [UIColor whiteColor];
     highRangeLabelNode.text = @"Play Highest Note";
     highRangeLabelNode.position = CGPointMake(0.5*self.size.width, 0.5*self.size.height);
     [_highRangeScreenNode addChild:highRangeLabelNode];
+    
+    SpriteButton *backButton = [SpriteButton spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"BackButton" stringByAppendingString:_deviceSuffix]]];
+    [backButton setDefaults];
+    backButton.name = @"BackButton";
+    backButton.position = CGPointMake(0.5*backButton.size.width + 0.5*backButton.size.height, backButton.size.height);
+    backButton.delegate = self;
+    [_highRangeScreenNode addChild:backButton];
     
     SKAction *blink = [SKAction sequence:@[
                                            [SKAction fadeAlphaTo:0.5 duration:1.0],
@@ -557,18 +609,19 @@ void midiInputCallback (const MIDIPacketList *list,
 }
 
 -(void)killHighRange{
-    [self enumerateChildNodesWithName:@"HighRangeScreenNode" usingBlock:^(SKNode *node, BOOL *stop){
-        [node removeAllChildren];
-    }];
-    [self enumerateChildNodesWithName:@"HighRangeScreenNode" usingBlock:^(SKNode *node, BOOL *stop){
-        [node removeFromParent];
-    }];
+    [_highRangeScreenNode removeAllChildren];
+    [self removeAllChildren];
 }
 
 -(void)transitionHighRangeToGame{
     [self killHighRange];
     [self buildChordCatalog];
     [self loadGame];
+}
+
+-(void)transitionHighRangeToLowRange{
+    [self killHighRange];
+    [self loadLowRange];
 }
 
 #pragma mark - Game
@@ -587,30 +640,67 @@ void midiInputCallback (const MIDIPacketList *list,
     _gameScreenNode.name = @"GameScreenNode";
     [self addChild:_gameScreenNode];
     
-    [self loadStaffLineWithPosition:CGPointMake(0.5*self.size.width, 7*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
-    [self loadStaffLineWithPosition:CGPointMake(0.5*self.size.width, 8*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
-    [self loadStaffLineWithPosition:CGPointMake(0.5*self.size.width, 9*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
-    [self loadStaffLineWithPosition:CGPointMake(0.5*self.size.width, 10*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
-    [self loadStaffLineWithPosition:CGPointMake(0.5*self.size.width, 11*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
-    [self loadStaffLineWithPosition:CGPointMake(0.5*self.size.width, 21*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
-    [self loadStaffLineWithPosition:CGPointMake(0.5*self.size.width, 22*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
-    [self loadStaffLineWithPosition:CGPointMake(0.5*self.size.width, 23*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
-    [self loadStaffLineWithPosition:CGPointMake(0.5*self.size.width, 24*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
-    [self loadStaffLineWithPosition:CGPointMake(0.5*self.size.width, 25*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
-
-    SKSpriteNode *bassClef = [SKSpriteNode spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"BassClef" stringByAppendingString:_deviceSuffix]]];
-    bassClef.name = @"BassClef";
-    bassClef.xScale = 0.5;
-    bassClef.yScale = 0.5;
-    bassClef.position = CGPointMake(0.1*self.size.width, 9.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1));
-    [_gameScreenNode addChild:bassClef];
+    _pausedScreenNode = [SKNode node];
+    _pausedScreenNode.name = @"PausedScreenNode";
+    [self addChild:_pausedScreenNode];
     
-    SKSpriteNode *trebleClef = [SKSpriteNode spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"TrebleClef" stringByAppendingString:_deviceSuffix]]];
-    trebleClef.name = @"TrebleClef";
-    trebleClef.xScale = 0.5;
-    trebleClef.yScale = 0.5;
-    trebleClef.position = CGPointMake(0.1*self.size.width, 23*self.size.height/(NUMBER_OF_STAFF_LINES + 1));
-    [_gameScreenNode addChild:trebleClef];
+    if (_gameData.staff == 0) {
+        
+        SKSpriteNode *bassClef = [SKSpriteNode spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"BassClef" stringByAppendingString:_deviceSuffix]]];
+        bassClef.name = @"BassClef";
+        bassClef.xScale = 0.5;
+        bassClef.yScale = 0.5;
+        bassClef.position = CGPointMake(0.1*self.size.width, 14.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1));
+        [_gameScreenNode addChild:bassClef];
+        
+        for (int i=12; i<=16; i++) {
+            [self loadStaffLineWithPosition:CGPointMake(0.5*self.size.width, i*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+        }
+        
+    }
+    else if (_gameData.staff == 1){
+        SKSpriteNode *trebleClef = [SKSpriteNode spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"TrebleClef" stringByAppendingString:_deviceSuffix]]];
+        trebleClef.name = @"TrebleClef";
+        trebleClef.xScale = 0.5;
+        trebleClef.yScale = 0.5;
+        trebleClef.position = CGPointMake(0.1*self.size.width, 14*self.size.height/(NUMBER_OF_STAFF_LINES + 1));
+        [_gameScreenNode addChild:trebleClef];
+        
+        for (int i=12; i<=16; i++) {
+            [self loadStaffLineWithPosition:CGPointMake(0.5*self.size.width, i*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+        }
+        
+    }
+    else if (_gameData.staff == 2){
+        
+        SKSpriteNode *bassClef = [SKSpriteNode spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"BassClef" stringByAppendingString:_deviceSuffix]]];
+        bassClef.name = @"BassClef";
+        bassClef.xScale = 0.5;
+        bassClef.yScale = 0.5;
+        bassClef.position = CGPointMake(0.1*self.size.width, 9.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1));
+        [_gameScreenNode addChild:bassClef];
+        
+        SKSpriteNode *trebleClef = [SKSpriteNode spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"TrebleClef" stringByAppendingString:_deviceSuffix]]];
+        trebleClef.name = @"TrebleClef";
+        trebleClef.xScale = 0.5;
+        trebleClef.yScale = 0.5;
+        trebleClef.position = CGPointMake(0.1*self.size.width, 23*self.size.height/(NUMBER_OF_STAFF_LINES + 1));
+        [_gameScreenNode addChild:trebleClef];
+        
+        
+        for (int i=7; i<=11; i++) {
+            [self loadStaffLineWithPosition:CGPointMake(0.5*self.size.width, i*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+        }
+        for (int i=21; i<=25; i++) {
+            [self loadStaffLineWithPosition:CGPointMake(0.5*self.size.width, i*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+        }
+    }
+    
+    [self loadKeySignature];
+
+    
+    
+    
     
     _currentNameNode = [SKLabelNode labelNodeWithFontNamed:@"HelveticaNeue-UltraLight"];
     _currentNameNode.name = @"NoteName";
@@ -622,7 +712,7 @@ void midiInputCallback (const MIDIPacketList *list,
    
     _timeRemainingNode = [SKLabelNode labelNodeWithFontNamed:@"HelveticaNeue-UltraLight"];
     _timeRemainingNode.name = @"TimeRemaining";
-    _timeRemainingNode.fontSize = 0.08*self.size.height;
+    _timeRemainingNode.fontSize = 0.05*self.size.height;
     _timeRemainingNode.fontColor = [UIColor blackColor];
     _timeRemainingNode.position = CGPointMake(0.95*self.size.width, 0.9*self.size.height);
     _timeRemainingNode.horizontalAlignmentMode = SKLabelHorizontalAlignmentModeRight;
@@ -631,37 +721,395 @@ void midiInputCallback (const MIDIPacketList *list,
     
     _scoreNode = [SKLabelNode labelNodeWithFontNamed:@"HelveticaNeue-UltraLight"];
     _scoreNode.name = @"Score";
-    _scoreNode.fontSize = 0.08*self.size.height;
+    _scoreNode.fontSize = 0.05*self.size.height;
     _scoreNode.fontColor = [UIColor blackColor];
     _scoreNode.position = CGPointMake(0.05*self.size.width, 0.9*self.size.height);
     _scoreNode.horizontalAlignmentMode = SKLabelHorizontalAlignmentModeLeft;
     _scoreNode.text = [NSString stringWithFormat:@"%i",_score];
     [_gameScreenNode addChild:_scoreNode];
     
+    SpriteButton *pauseButton = [SpriteButton spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"PauseButton" stringByAppendingString:_deviceSuffix]]];
+    [pauseButton setDefaults];
+    pauseButton.name = @"PauseButton";
+    pauseButton.position = CGPointMake(0.5*pauseButton.size.width + 0.5*pauseButton.size.height, pauseButton.size.height);
+    pauseButton.delegate = self;
+    [_gameScreenNode addChild:pauseButton];
+    
     id wait = [SKAction waitForDuration:1];
     id run = [SKAction runBlock:^{
         [self decrementTimeRemaining];
     }];
-    [self runAction:[SKAction repeatAction:[SKAction sequence:@[wait, run]] count:_timeRemaining]];
+    [_gameScreenNode runAction:[SKAction repeatAction:[SKAction sequence:@[wait, run]] count:_timeRemaining]];
     
     
     //Generate random chord
     [self loadNotesFromChord:_chordCatalog[arc4random_uniform((int)_chordCatalog.count - 1)]];
 }
 
--(void)killGame{
-  
-    [self enumerateChildNodesWithName:@"GameScreenNode" usingBlock:^(SKNode *node, BOOL *stop){
-        [node removeAllChildren];
+-(void)loadPausedMode{
+    
+    
+    [_gameScreenNode enumerateChildNodesWithName:@"Note" usingBlock:^(SKNode *node, BOOL *stop){
+         node.hidden = YES;
     }];
-    [self enumerateChildNodesWithName:@"GameScreenNode" usingBlock:^(SKNode *node, BOOL *stop){
+    [_gameScreenNode enumerateChildNodesWithName:@"LedgerLine" usingBlock:^(SKNode *node, BOOL *stop){
+         node.hidden = YES;
+    }];
+    [_gameScreenNode enumerateChildNodesWithName:@"Accidental" usingBlock:^(SKNode *node, BOOL *stop){
+        node.hidden = YES;
+    }];
+    
+    
+    
+    [self enumerateChildNodesWithName:@"Note" usingBlock:^(SKNode *node, BOOL *stop){
         [node removeFromParent];
     }];
-
+    
+    SpriteButton *retryButtonNode = [SpriteButton spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"RetryButton" stringByAppendingString:_deviceSuffix]]];
+    [retryButtonNode setDefaults];
+    retryButtonNode.name = @"RetryButton";
+    int spaceBetweenButtons = 0.75*retryButtonNode.size.height;
+    retryButtonNode.position = CGPointMake(0.5*self.size.width, 0.5*self.size.height + spaceBetweenButtons);
+    retryButtonNode.delegate = self;
+    [_pausedScreenNode addChild:retryButtonNode];
+    
+    SpriteButton *returnButtonNode = [SpriteButton spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"ReturnButton" stringByAppendingString:_deviceSuffix]]];
+    [returnButtonNode setDefaults];
+    returnButtonNode.name = @"ReturnButton";
+    returnButtonNode.position = CGPointMake(0.5*self.size.width,  0.5*self.size.height - spaceBetweenButtons);
+    returnButtonNode.delegate = self;
+    [_pausedScreenNode addChild:returnButtonNode];
 }
+
+
+
+-(void)killPausedMode{
+    [_pausedScreenNode removeAllChildren];
+    
+    
+    [_gameScreenNode enumerateChildNodesWithName:@"Note" usingBlock:^(SKNode *node, BOOL *stop){
+        node.hidden = NO;
+    }];
+    [_gameScreenNode enumerateChildNodesWithName:@"LedgerLine" usingBlock:^(SKNode *node, BOOL *stop){
+        node.hidden = NO;
+    }];
+    [_gameScreenNode enumerateChildNodesWithName:@"Accidental" usingBlock:^(SKNode *node, BOOL *stop){
+        node.hidden = NO;
+    }];
+    
+}
+
+-(void)loadKeySignature{
+    
+    double keySignatureSymbolSpacing = 0.02;
+    
+    //Add key signature symbols
+    if (_gameData.key <= -1 && _gameData.key < 0) {
+        
+        
+        if (_gameData.staff == 0) {
+            
+            [self addKeySignatureSymbol:-1 WithPosition:CGPointMake(0.2*self.size.width, 13*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+        }
+        else if (_gameData.staff == 1){
+            
+            [self addKeySignatureSymbol:-1 WithPosition:CGPointMake(0.2*self.size.width, 14*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+            
+        }
+        else if (_gameData.staff == 2){
+            [self addKeySignatureSymbol:-1 WithPosition:CGPointMake(0.2*self.size.width, 8*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+            [self addKeySignatureSymbol:-1 WithPosition:CGPointMake(0.2*self.size.width, 23*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+            
+        }
+    }
+    
+    if (_gameData.key <= -2 && _gameData.key <0){
+        if (_gameData.staff == 0) {
+            
+            [self addKeySignatureSymbol:-1 WithPosition:CGPointMake((0.2 + 1.0*keySignatureSymbolSpacing)*self.size.width, 14.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+        }
+        else if (_gameData.staff == 1){
+            
+            [self addKeySignatureSymbol:-1 WithPosition:CGPointMake((0.2 + 1.0*keySignatureSymbolSpacing)*self.size.width, 15.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+            
+        }
+        else if (_gameData.staff == 2){
+            [self addKeySignatureSymbol:-1 WithPosition:CGPointMake((0.2 + 1.0*keySignatureSymbolSpacing)*self.size.width, 9.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+            [self addKeySignatureSymbol:-1 WithPosition:CGPointMake((0.2 + 1.0*keySignatureSymbolSpacing)*self.size.width, 24.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+            
+        }
+    }
+    
+    if (_gameData.key <= -3 && _gameData.key <0){
+        if (_gameData.staff == 0) {
+            
+            [self addKeySignatureSymbol:-1 WithPosition:CGPointMake((0.2 + 2.0*keySignatureSymbolSpacing)*self.size.width, 12.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+        }
+        else if (_gameData.staff == 1){
+            
+            [self addKeySignatureSymbol:-1 WithPosition:CGPointMake((0.2 + 2.0*keySignatureSymbolSpacing)*self.size.width, 13.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+            
+        }
+        else if (_gameData.staff == 2){
+            [self addKeySignatureSymbol:-1 WithPosition:CGPointMake((0.2 + 2.0*keySignatureSymbolSpacing)*self.size.width, 7.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+            [self addKeySignatureSymbol:-1 WithPosition:CGPointMake((0.2 + 2.0*keySignatureSymbolSpacing)*self.size.width, 22.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+            
+        }
+    }
+    
+    if (_gameData.key <= -4 && _gameData.key <0){
+        if (_gameData.staff == 0) {
+            
+            [self addKeySignatureSymbol:-1 WithPosition:CGPointMake((0.2 + 3.0*keySignatureSymbolSpacing)*self.size.width, 14*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+        }
+        else if (_gameData.staff == 1){
+            
+            [self addKeySignatureSymbol:-1 WithPosition:CGPointMake((0.2 + 3.0*keySignatureSymbolSpacing)*self.size.width, 15*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+            
+        }
+        else if (_gameData.staff == 2){
+            [self addKeySignatureSymbol:-1 WithPosition:CGPointMake((0.2 + 3.0*keySignatureSymbolSpacing)*self.size.width, 9*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+            [self addKeySignatureSymbol:-1 WithPosition:CGPointMake((0.2 + 3.0*keySignatureSymbolSpacing)*self.size.width, 24*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+            
+        }
+    }
+    
+    if (_gameData.key <= -5 && _gameData.key <0){
+        if (_gameData.staff == 0) {
+            
+            [self addKeySignatureSymbol:-1 WithPosition:CGPointMake((0.2 + 4.0*keySignatureSymbolSpacing)*self.size.width, 12*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+        }
+        else if (_gameData.staff == 1){
+            
+            [self addKeySignatureSymbol:-1 WithPosition:CGPointMake((0.2 + 4.0*keySignatureSymbolSpacing)*self.size.width, 13*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+            
+        }
+        else if (_gameData.staff == 2){
+            [self addKeySignatureSymbol:-1 WithPosition:CGPointMake((0.2 + 4.0*keySignatureSymbolSpacing)*self.size.width, 7*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+            [self addKeySignatureSymbol:-1 WithPosition:CGPointMake((0.2 + 4.0*keySignatureSymbolSpacing)*self.size.width, 22*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+            
+        }
+    }
+    
+    if (_gameData.key <= -6 && _gameData.key <0){
+        if (_gameData.staff == 0) {
+            
+            [self addKeySignatureSymbol:-1 WithPosition:CGPointMake((0.2 + 5.0*keySignatureSymbolSpacing)*self.size.width, 13.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+        }
+        else if (_gameData.staff == 1){
+            
+            [self addKeySignatureSymbol:-1 WithPosition:CGPointMake((0.2 + 5.0*keySignatureSymbolSpacing)*self.size.width, 14.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+            
+        }
+        else if (_gameData.staff == 2){
+            [self addKeySignatureSymbol:-1 WithPosition:CGPointMake((0.2 + 5.0*keySignatureSymbolSpacing)*self.size.width, 8.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+            [self addKeySignatureSymbol:-1 WithPosition:CGPointMake((0.2 + 5.0*keySignatureSymbolSpacing)*self.size.width, 23.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+            
+        }
+    }
+    
+    if (_gameData.key <= -7 && _gameData.key <0){
+        if (_gameData.staff == 0) {
+            
+            [self addKeySignatureSymbol:-1 WithPosition:CGPointMake((0.2 + 6.0*keySignatureSymbolSpacing)*self.size.width, 11.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+        }
+        else if (_gameData.staff == 1){
+            
+            [self addKeySignatureSymbol:-1 WithPosition:CGPointMake((0.2 + 6.0*keySignatureSymbolSpacing)*self.size.width, 12.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+            
+        }
+        else if (_gameData.staff == 2){
+            [self addKeySignatureSymbol:-1 WithPosition:CGPointMake((0.2 + 6.0*keySignatureSymbolSpacing)*self.size.width, 6.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+            [self addKeySignatureSymbol:-1 WithPosition:CGPointMake((0.2 + 6.0*keySignatureSymbolSpacing)*self.size.width, 21.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+            
+        }
+    }
+    
+    if (_gameData.key >= 1 && _gameData.key > 0) {
+        
+        
+        if (_gameData.staff == 0) {
+            
+            [self addKeySignatureSymbol:1 WithPosition:CGPointMake(0.2*self.size.width, 15*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+        }
+        else if (_gameData.staff == 1){
+            
+            [self addKeySignatureSymbol:1 WithPosition:CGPointMake(0.2*self.size.width, 16*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+            
+        }
+        else if (_gameData.staff == 2){
+            [self addKeySignatureSymbol:1 WithPosition:CGPointMake(0.2*self.size.width, 10*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+            [self addKeySignatureSymbol:1 WithPosition:CGPointMake(0.2*self.size.width, 25*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+            
+        }
+    }
+    
+    if (_gameData.key >= 2 && _gameData.key > 0) {
+        
+        
+        if (_gameData.staff == 0) {
+            
+            [self addKeySignatureSymbol:1 WithPosition:CGPointMake((0.2 + 1.0*keySignatureSymbolSpacing)*self.size.width, 13.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+        }
+        else if (_gameData.staff == 1){
+            
+            [self addKeySignatureSymbol:1 WithPosition:CGPointMake((0.2 + 1.0*keySignatureSymbolSpacing)*self.size.width, 14.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+            
+        }
+        else if (_gameData.staff == 2){
+            [self addKeySignatureSymbol:1 WithPosition:CGPointMake((0.2 + 1.0*keySignatureSymbolSpacing)*self.size.width, 8.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+            [self addKeySignatureSymbol:1 WithPosition:CGPointMake((0.2 + 1.0*keySignatureSymbolSpacing)*self.size.width, 23.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+            
+        }
+    }
+    
+    if (_gameData.key >= 3 && _gameData.key > 0) {
+        
+        
+        if (_gameData.staff == 0) {
+            
+            [self addKeySignatureSymbol:1 WithPosition:CGPointMake((0.2 + 2.0*keySignatureSymbolSpacing)*self.size.width, 15.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+        }
+        else if (_gameData.staff == 1){
+            
+            [self addKeySignatureSymbol:1 WithPosition:CGPointMake((0.2 + 2.0*keySignatureSymbolSpacing)*self.size.width, 16.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+            
+        }
+        else if (_gameData.staff == 2){
+            [self addKeySignatureSymbol:1 WithPosition:CGPointMake((0.2 + 2.0*keySignatureSymbolSpacing)*self.size.width, 10.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+            [self addKeySignatureSymbol:1 WithPosition:CGPointMake((0.2 + 2.0*keySignatureSymbolSpacing)*self.size.width, 25.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+            
+        }
+    }
+    
+    if (_gameData.key >= 4 && _gameData.key > 0) {
+        
+        
+        if (_gameData.staff == 0) {
+            
+            [self addKeySignatureSymbol:1 WithPosition:CGPointMake((0.2 + 3.0*keySignatureSymbolSpacing)*self.size.width, 14*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+        }
+        else if (_gameData.staff == 1){
+            
+            [self addKeySignatureSymbol:1 WithPosition:CGPointMake((0.2 + 3.0*keySignatureSymbolSpacing)*self.size.width, 15*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+            
+        }
+        else if (_gameData.staff == 2){
+            [self addKeySignatureSymbol:1 WithPosition:CGPointMake((0.2 + 3.0*keySignatureSymbolSpacing)*self.size.width, 9*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+            [self addKeySignatureSymbol:1 WithPosition:CGPointMake((0.2 + 3.0*keySignatureSymbolSpacing)*self.size.width, 24*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+            
+        }
+    }
+    
+    if (_gameData.key >= 5 && _gameData.key > 0) {
+        
+        
+        if (_gameData.staff == 0) {
+            
+            [self addKeySignatureSymbol:1 WithPosition:CGPointMake((0.2 + 4.0*keySignatureSymbolSpacing)*self.size.width, 12.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+        }
+        else if (_gameData.staff == 1){
+            
+            [self addKeySignatureSymbol:1 WithPosition:CGPointMake((0.2 + 4.0*keySignatureSymbolSpacing)*self.size.width, 13.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+            
+        }
+        else if (_gameData.staff == 2){
+            [self addKeySignatureSymbol:1 WithPosition:CGPointMake((0.2 + 4.0*keySignatureSymbolSpacing)*self.size.width, 7.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+            [self addKeySignatureSymbol:1 WithPosition:CGPointMake((0.2 + 4.0*keySignatureSymbolSpacing)*self.size.width, 22.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+            
+        }
+    }
+    
+    if (_gameData.key >= 6 && _gameData.key > 0) {
+        
+        
+        if (_gameData.staff == 0) {
+            
+            [self addKeySignatureSymbol:1 WithPosition:CGPointMake((0.2 + 5.0*keySignatureSymbolSpacing)*self.size.width, 14.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+        }
+        else if (_gameData.staff == 1){
+            
+            [self addKeySignatureSymbol:1 WithPosition:CGPointMake((0.2 + 5.0*keySignatureSymbolSpacing)*self.size.width, 15.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+            
+        }
+        else if (_gameData.staff == 2){
+            [self addKeySignatureSymbol:1 WithPosition:CGPointMake((0.2 + 5.0*keySignatureSymbolSpacing)*self.size.width, 9.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+            [self addKeySignatureSymbol:1 WithPosition:CGPointMake((0.2 + 5.0*keySignatureSymbolSpacing)*self.size.width, 24.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+            
+        }
+    }
+    if (_gameData.key >= 7 && _gameData.key > 0) {
+        
+        
+        if (_gameData.staff == 0) {
+            
+            [self addKeySignatureSymbol:1 WithPosition:CGPointMake((0.2 + 6.0*keySignatureSymbolSpacing)*self.size.width, 13*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+        }
+        else if (_gameData.staff == 1){
+            
+            [self addKeySignatureSymbol:1 WithPosition:CGPointMake((0.2 + 6.0*keySignatureSymbolSpacing)*self.size.width, 14*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+            
+        }
+        else if (_gameData.staff == 2){
+            [self addKeySignatureSymbol:1 WithPosition:CGPointMake((0.2 + 6.0*keySignatureSymbolSpacing)*self.size.width, 8*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+            [self addKeySignatureSymbol:1 WithPosition:CGPointMake((0.2 + 6.0*keySignatureSymbolSpacing)*self.size.width, 23*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+            
+        }
+    }
+}
+
+-(void)addKeySignatureSymbol:(int)symbol WithPosition:(CGPoint)position{
+    
+    CGPoint accidentalAnchor;
+    NSString *symbolName;
+    
+    if (symbol == -1) {
+        symbolName = @"Flat";
+        accidentalAnchor = CGPointMake(0.5, 0.3);
+        
+    }
+    else if (symbol == 1){
+        symbolName = @"Sharp";
+        accidentalAnchor = CGPointMake(0.5, 0.5);
+    }
+    else{
+        symbolName = @"Natural";
+        accidentalAnchor = CGPointMake(0.5, 0.5);
+        NSLog(@"Error determining key signature");
+    }
+    
+    SKSpriteNode *keySignatureSymbol = [SKSpriteNode spriteNodeWithTexture:[SKTexture textureWithImageNamed:[symbolName stringByAppendingString:_deviceSuffix]]];
+    keySignatureSymbol.name = @"KeySignature";
+    keySignatureSymbol.xScale = 0.35;
+    keySignatureSymbol.yScale = 0.35;
+    keySignatureSymbol.anchorPoint = accidentalAnchor;
+    //Determine y position based on staff
+    keySignatureSymbol.position = position;
+    [_gameScreenNode addChild:keySignatureSymbol];
+    
+}
+-(void)killGame{
+  
+    [_gameScreenNode removeAllChildren];
+    [_pausedScreenNode removeAllChildren];
+    [self removeAllChildren];
+}
+
 -(void)transitionGameToScore{
     [self killGame];
     [self loadScore];
+}
+
+-(void)transitionGameToGame{
+    [self killPausedMode];
+    [self killGame];
+    [self loadGame];
+}
+
+-(void)transitionGameToMenu{
+    [self killPausedMode];
+    [self killGame];
+    [self loadMenu];
 }
 
 -(void)decrementTimeRemaining{
@@ -698,7 +1146,7 @@ void midiInputCallback (const MIDIPacketList *list,
     [self addChild:_scoreScreenNode];
     
     SKLabelNode *gameOverLabelNode = [SKLabelNode labelNodeWithFontNamed:@"HelveticaNeue-UltraLight"];
-    gameOverLabelNode.Name = @"GameOver";
+    gameOverLabelNode.name = @"GameOver";
     gameOverLabelNode.fontSize = 0.1*self.size.height;
     gameOverLabelNode.fontColor = [UIColor whiteColor];
     gameOverLabelNode.text = @"Game Over";
@@ -713,7 +1161,7 @@ void midiInputCallback (const MIDIPacketList *list,
     [_scoreScreenNode addChild:scoreBannerNode];
     
     SKLabelNode *scoreLabelNode = [SKLabelNode labelNodeWithFontNamed:@"HelveticaNeue-UltraLight"];
-    scoreLabelNode.Name = @"Score";
+    scoreLabelNode.name = @"Score";
     scoreLabelNode.fontSize = 0.8*scoreBannerNode.size.height;
     scoreLabelNode.fontColor = [SKColor whiteColor];
     scoreLabelNode.text = [NSString stringWithFormat:@"Score: %i",_score];
@@ -729,7 +1177,7 @@ void midiInputCallback (const MIDIPacketList *list,
     [_scoreScreenNode addChild:bestBannerNode];
     
     SKLabelNode *bestLabelNode = [SKLabelNode labelNodeWithFontNamed:@"HelveticaNeue-UltraLight"];
-    bestLabelNode.Name = @"Best";
+    bestLabelNode.name = @"Best";
     bestLabelNode.fontSize = 0.8*bestBannerNode.size.height;
     bestLabelNode.fontColor = [SKColor whiteColor];
     bestLabelNode.text = [NSString stringWithFormat:@"Best: %i",_gameData.bestScore];
@@ -758,13 +1206,8 @@ void midiInputCallback (const MIDIPacketList *list,
 
 -(void)killScore{
     
-    [self enumerateChildNodesWithName:@"ScoreScreenNode" usingBlock:^(SKNode *node, BOOL *stop){
-        [node removeAllChildren];
-    }];
-    
-    [self enumerateChildNodesWithName:@"ScoreScreenNode" usingBlock:^(SKNode *node, BOOL *stop){
-        [node removeFromParent];
-    }];
+    [_scoreScreenNode removeAllChildren];
+    [self removeAllChildren];
 }
 
 -(void)transitionScoreToGame{
@@ -781,35 +1224,33 @@ void midiInputCallback (const MIDIPacketList *list,
 
 -(void)buildChordCatalog{
     NSArray *chordArray;
-    
-    
-    switch (_gameData.key) {
-        case 0:
-       
-            chordArray = [self chordsFromJSON];
-
-            _chordCatalog = [self chordCatalogFromChordArray:chordArray];
-           
-            
-            
-    
-            break;
-            
-        default:NSLog(@"Error selecting chord");
-            break;
-    }
+    chordArray = [self chordsFromJSON];
+    _chordCatalog = [self chordCatalogFromChordArray:chordArray];
     
 }
 
 -(NSArray*)chordsFromJSON{
     
+    NSString *query;
+    if (_gameData.staff == 2) {
+        query = [NSString stringWithFormat:@"key == %i", _gameData.key];
+    }
+    else{
+        query = [NSString stringWithFormat:@"key == %i AND staff == %i", _gameData.key, _gameData.staff];
+    }
+    
     id delegate = [[UIApplication sharedApplication] delegate];
     
     NSManagedObjectContext *context = [delegate managedObjectContext];
     
-    NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] init];
     NSEntityDescription *entity = [NSEntityDescription entityForName:@"Chord"
                                               inManagedObjectContext:context];
+    
+    NSFetchRequest *fetchRequest = [[NSFetchRequest alloc] init];
+    
+    
+    [fetchRequest setPredicate:[NSPredicate predicateWithFormat:query]];
+    
     [fetchRequest setEntity:entity];
     NSArray *fetchedObjects = [context executeFetchRequest:fetchRequest error:nil];
     
@@ -847,23 +1288,11 @@ void midiInputCallback (const MIDIPacketList *list,
     NSMutableArray *chordCatalog = [NSMutableArray arrayWithArray:chordArray];
    
     for (Chord *chord in chordCatalog) {
-        //Filter out chords in other keys
-        if ([chord.key intValue] != _gameData.key) {
+        
+        if (![self chordInBounds:chord]) {
             [chordCatalog removeObject:chord];
         }
-        else{
-            //Filter out chords on other staff
-            if ( _gameData.staff != 2 && ([chord.staff intValue] != _gameData.staff)) {
-                [chordCatalog removeObject:chord];
-            }
-            else{
-                //Filter out chords outside of bounds
-                if (![self chordInBounds:chord]) {
-                    [chordCatalog removeObject:chord];
-                }
-            }
-            
-        }
+        
     }
     
     return chordCatalog;
@@ -899,21 +1328,21 @@ void midiInputCallback (const MIDIPacketList *list,
     
     
     
-    
+    [self addLedgerLinesForChord:chord];
     for (Note *note in notes) {
-
+        
         [self addNote:note fromChord:chord];
         if ([note.accidental intValue] == 1) {
             [self addAccidentalForNote:note fromChord:chord];
         }
-  
     }
-    [self addLedgerLinesForChord:chord];
+    
     
 }
 
 -(void)addNote:(Note*)note fromChord:(Chord*)chord{
     
+    NSLog(@"Chord: %@, Note: %@:%i", chord.name, note.name, [note staffLocation] );
     //Determine y position based on staff
     int yPosition = [self noteYPositionFromStaffLocation:[note staffLocation] forStaff:[note.staff intValue]];
     
@@ -923,14 +1352,20 @@ void midiInputCallback (const MIDIPacketList *list,
         xPosition = 0.5*self.size.width;
     }
     else{
-        xPosition = 0.553*self.size.width;
+        xPosition = 0.56*self.size.width;
     }
     
+    NSMutableDictionary *noteData;
+    noteData = [[NSMutableDictionary alloc]init];
+    [noteData setValue:[NSNumber numberWithInt:note.midiNumber] forKey:@"MidiNumber"];
     //Create Note node
     SKSpriteNode *noteNode = [SKSpriteNode spriteNodeWithTexture:[SKTexture textureWithImageNamed:[@"Note" stringByAppendingString:_deviceSuffix]]];
     noteNode.name = @"Note";
     noteNode.xScale = 0.5;
     noteNode.yScale = 0.5;
+    noteNode.color = [UIColor blackColor];
+    noteNode.colorBlendFactor = 1;
+    noteNode.userData = noteData;
     noteNode.position = CGPointMake(xPosition, yPosition);
     [_gameScreenNode addChild:noteNode];
     
@@ -940,19 +1375,33 @@ void midiInputCallback (const MIDIPacketList *list,
  location number */
 -(int)noteYPositionFromStaffLocation:(int)staffLocation forStaff:(int)staff
 {
-    //Position nodes relative to bass staff
-    if (staff == 0) {
-        return 0.5*staffLocation*self.size.height/(NUMBER_OF_STAFF_LINES + 1) + 0.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1);
+    if (_gameData.staff == 0) {
+        return 0.5*(staffLocation + 10)*self.size.height/(NUMBER_OF_STAFF_LINES + 1) + 0.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1);
     }
-    //Position nodes relative to treble staff
-    else if(staff == 1)
-    {
-        return 0.5*(staffLocation + 16)*self.size.height/(NUMBER_OF_STAFF_LINES + 1) + 0.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1);
+    else if (_gameData.staff == 1){
+       return 0.5*(staffLocation - 2)*self.size.height/(NUMBER_OF_STAFF_LINES + 1) + 0.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1);
+    }
+    else if (_gameData.staff == 2) {
+        //Position nodes relative to bass staff
+        if (staff == 0) {
+            return 0.5*staffLocation*self.size.height/(NUMBER_OF_STAFF_LINES + 1) + 0.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1);
+        }
+        //Position nodes relative to treble staff
+        else if(staff == 1)
+        {
+            return 0.5*(staffLocation + 16)*self.size.height/(NUMBER_OF_STAFF_LINES + 1) + 0.5*self.size.height/(NUMBER_OF_STAFF_LINES + 1);
+        }
+        else{
+            NSLog(@"Error: Failed to determine staff location");
+            return 0;
+        }
+
     }
     else{
         NSLog(@"Error: Failed to determine staff location");
         return 0;
     }
+    
 }
 
 -(void)addAccidentalForNote:(Note*)note fromChord:(Chord*)chord{
@@ -994,8 +1443,8 @@ void midiInputCallback (const MIDIPacketList *list,
     //Create Accidental node
     SKSpriteNode *accidentalNode = [SKSpriteNode spriteNodeWithTexture:[SKTexture textureWithImageNamed:[accidental stringByAppendingString:_deviceSuffix]]];
     accidentalNode.name = @"Accidental";
-    accidentalNode.xScale = 0.5;
-    accidentalNode.yScale = 0.5;
+    accidentalNode.xScale = 0.35;
+    accidentalNode.yScale = 0.35;
     accidentalNode.anchorPoint = accidentalAnchor;
     
     //Determine y position based on staff
@@ -1003,10 +1452,10 @@ void midiInputCallback (const MIDIPacketList *list,
     
     int xPosition;
     if(![chord accidentalOverlapForNote:note]){
-        xPosition = 0.5*self.size.width - 0.12*self.size.width;
+        xPosition = 0.5*self.size.width - 0.1*self.size.width;
     }
     else{
-        xPosition = 0.5*self.size.width - 0.22*self.size.width;
+        xPosition = 0.5*self.size.width - 0.15*self.size.width;
     }
     
     accidentalNode.position = CGPointMake(xPosition, yPosition);
@@ -1015,48 +1464,63 @@ void midiInputCallback (const MIDIPacketList *list,
 
 -(void)addLedgerLinesForChord:(Chord*)chord{
 
-    int currentLedgerLine;
+    int currentLedgerLine = 0;
     //Add ledger lines for notes below bass clef
-    currentLedgerLine = 7;
+    if (_gameData.staff == 0) currentLedgerLine = 12;
+    else if (_gameData.staff == 2) currentLedgerLine = 7;
     for (int j = 0; j < [chord centeredLedgerLinesBelowBassClef]/2; j++) {
         [self loadLedgerLineWithPosition:CGPointMake(0.5*self.size.width, (currentLedgerLine - 1)*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
         currentLedgerLine--;
     }
+    
+    if (_gameData.staff == 0) currentLedgerLine = 12;
+    else if (_gameData.staff == 2) currentLedgerLine = 7;
     for (int j = 0; j < [chord shiftedLedgerLinesBelowBassClef]/2; j++) {
-        [self loadLedgerLineWithPosition:CGPointMake(0.553*self.size.width, (currentLedgerLine - 1)*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+        [self loadLedgerLineWithPosition:CGPointMake(0.56*self.size.width, (currentLedgerLine - 1)*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
         currentLedgerLine--;
     }
     
     //Add ledger lines for notes above bass clef
-    currentLedgerLine = 11;
+    if (_gameData.staff == 0) currentLedgerLine = 16;
+    else if (_gameData.staff == 2) currentLedgerLine = 11;
     for (int j = 0; j < ([chord centeredLedgerLinesAboveBassClef])/2; j++) {
         [self loadLedgerLineWithPosition:CGPointMake(0.5*self.size.width, (currentLedgerLine + 1)*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
         currentLedgerLine++;
     }
+    
+    if (_gameData.staff == 0) currentLedgerLine = 16;
+    else if (_gameData.staff == 2) currentLedgerLine = 11;
     for (int j = 0; j < ([chord shiftedLedgerLinesAboveBassClef])/2; j++) {
-        [self loadLedgerLineWithPosition:CGPointMake(0.553*self.size.width, (currentLedgerLine + 1)*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+        [self loadLedgerLineWithPosition:CGPointMake(0.56*self.size.width, (currentLedgerLine + 1)*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
         currentLedgerLine++;
     }
     
     //Add ledger lines for notes below treble clef
-    currentLedgerLine = 21;
+    if (_gameData.staff == 1) currentLedgerLine = 12;
+    else if (_gameData.staff == 2) currentLedgerLine = 21;
     for (int j = 0; j < ([chord centeredLedgerLinesBelowTrebleClef])/2; j++) {
         [self loadLedgerLineWithPosition:CGPointMake(0.5*self.size.width, (currentLedgerLine - 1)*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
         currentLedgerLine--;
     }
+    if (_gameData.staff == 1) currentLedgerLine = 12;
+    else if (_gameData.staff == 2) currentLedgerLine = 21;
     for (int j = 0; j < ([chord shiftedLedgerLinesBelowTrebleClef])/2; j++) {
-        [self loadLedgerLineWithPosition:CGPointMake(0.553*self.size.width, (currentLedgerLine - 1)*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+        [self loadLedgerLineWithPosition:CGPointMake(0.56*self.size.width, (currentLedgerLine - 1)*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
         currentLedgerLine--;
     }
     
     //Add ledger lines for notes above treble clef
-    currentLedgerLine = 25;
+    if (_gameData.staff == 1) currentLedgerLine = 16;
+    else if (_gameData.staff == 2) currentLedgerLine = 25;
     for (int j = 0; j < ([chord centeredLedgerLinesAboveTrebleClef])/2; j++) {
         [self loadLedgerLineWithPosition:CGPointMake(0.5*self.size.width, (currentLedgerLine + 1)*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
         currentLedgerLine++;
     }
-    for (int j = 0; j < ([chord centeredLedgerLinesAboveTrebleClef])/2; j++) {
-        [self loadLedgerLineWithPosition:CGPointMake(0.553*self.size.width, (currentLedgerLine + 1)*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
+    
+    if (_gameData.staff == 1) currentLedgerLine = 16;
+    else if (_gameData.staff == 2) currentLedgerLine = 25;
+    for (int j = 0; j < ([chord shiftedLedgerLinesAboveTrebleClef])/2; j++) {
+        [self loadLedgerLineWithPosition:CGPointMake(0.56*self.size.width, (currentLedgerLine + 1)*self.size.height/(NUMBER_OF_STAFF_LINES + 1))];
         currentLedgerLine++;
     }
 }
@@ -1117,7 +1581,15 @@ void midiInputCallback (const MIDIPacketList *list,
         }
        
     }
-
+    
+    [_gameScreenNode enumerateChildNodesWithName:@"Note" usingBlock:^(SKNode *node, BOOL *stop){
+        SKSpriteNode *noteNode = (SKSpriteNode*)node;
+        
+        if ([[noteNode.userData valueForKey:@"MidiNumber"] intValue] == userKeyNumber)  {
+            noteNode.color = [SKColor greenColor];
+        }
+    }];
+    
     if (correctPlay) {
        
         [self removeGameNotes];
@@ -1135,6 +1607,14 @@ void midiInputCallback (const MIDIPacketList *list,
 
 -(void)checkNoteReleaseWithNumber:(int)userKeyNumber
 {
+    [_gameScreenNode enumerateChildNodesWithName:@"Note" usingBlock:^(SKNode *node, BOOL *stop){
+        SKSpriteNode *noteNode = (SKSpriteNode*)node;
+        
+        if ([[noteNode.userData valueForKey:@"MidiNumber"] intValue] == userKeyNumber)  {
+            noteNode.color = [SKColor blackColor];
+        }
+    }];
+    
     [_notePressedFlags removeObjectIdenticalTo:[NSNumber numberWithInt:userKeyNumber]];
 }
 
@@ -1149,10 +1629,70 @@ transtion functions */
     }
     
     if (_currentScreen == kKey) {
-        if ([name isEqualToString:@"CMajor"]) {
+        if ([name isEqualToString:@"CFlatMajor"]) {
+            _gameData.key = -7;
+            [self transitionKeyToStaff];
+        }
+        else if ([name isEqualToString:@"GFlatMajor"]) {
+            _gameData.key = -6;
+            [self transitionKeyToStaff];
+        }
+        else if ([name isEqualToString:@"DFlatMajor"]) {
+            _gameData.key = -5;
+            [self transitionKeyToStaff];
+        }
+        else if ([name isEqualToString:@"AFlatMajor"]) {
+            _gameData.key = -4;
+            [self transitionKeyToStaff];
+        }
+        else if ([name isEqualToString:@"EFlatMajor"]) {
+            _gameData.key = -3;
+            [self transitionKeyToStaff];
+        }
+        else if ([name isEqualToString:@"BFlatMajor"]) {
+            _gameData.key = -2;
+            [self transitionKeyToStaff];
+        }
+        else if ([name isEqualToString:@"FMajor"]) {
+            _gameData.key = -1;
+            [self transitionKeyToStaff];
+        }
+        else if ([name isEqualToString:@"CMajor"]) {
             _gameData.key = 0;
             [self transitionKeyToStaff];
         }
+        else if ([name isEqualToString:@"GMajor"]) {
+            _gameData.key = 1;
+            [self transitionKeyToStaff];
+        }
+        else if ([name isEqualToString:@"DMajor"]) {
+            _gameData.key = 2;
+            [self transitionKeyToStaff];
+        }
+        else if ([name isEqualToString:@"AMajor"]) {
+            _gameData.key = 3;
+            [self transitionKeyToStaff];
+        }
+        else if ([name isEqualToString:@"EMajor"]) {
+            _gameData.key = 4;
+            [self transitionKeyToStaff];
+        }
+        else if ([name isEqualToString:@"BMajor"]) {
+            _gameData.key = 5;
+            [self transitionKeyToStaff];
+        }
+        else if ([name isEqualToString:@"FSharpMajor"]) {
+            _gameData.key = 6;
+            [self transitionKeyToStaff];
+        }
+        else if ([name isEqualToString:@"CSharpMajor"]) {
+            _gameData.key = 7;
+            [self transitionKeyToStaff];
+        }
+        else if ([name isEqualToString:@"BackButton"]){
+            [self transitionKeyToMenu];
+        }
+        
     }
     
     if (_currentScreen == kStaff) {
@@ -1168,6 +1708,9 @@ transtion functions */
             _gameData.staff = 2;
             [self transitionStaffToNotes];
         }
+        else if ([name isEqualToString:@"BackButton"]){
+            [self transitionStaffToKey];
+        }
     }
     if (_currentScreen == kNotes) {
         if ([name isEqualToString:@"SingleNotes"]) {
@@ -1182,14 +1725,54 @@ transtion functions */
             _gameData.notes = 2;
             [self transitionNotesToLowRange];
         }
+        else if ([name isEqualToString:@"BackButton"]){
+            [self transitionNotesToStaff];
+        }
     }
-    
+    if(_currentScreen == kLowRange){
+        if ([name isEqualToString:@"BackButton"]){
+            [self transitionLowRangeToNotes];
+        }
+    }
+    if(_currentScreen == kHighRange){
+        if ([name isEqualToString:@"BackButton"]){
+            [self transitionHighRangeToLowRange];
+        }
+    }
+    if(_currentScreen == kGame){
+        if ([name isEqualToString:@"PauseButton"]){
+            if (_gameData.isPaused == NO) {
+                [self loadPausedMode];
+                _gameScreenNode.paused = YES;
+                _gameData.isPaused = YES;
+                
+                
+            }
+            else if (_gameData.isPaused == YES) {
+                _gameScreenNode.paused = NO;
+                _gameData.isPaused = NO;
+                [_gameScreenNode enumerateChildNodesWithName:@"PauseButton" usingBlock:^(SKNode *node, BOOL *stop){
+                    node.alpha = 1.0;
+                }];
+                [self killPausedMode];
+            }
+        }
+        else if ([name isEqualToString:@"RetryButton"]) {
+            _gameData.isPaused = NO;
+            [self transitionGameToGame];
+        }
+        else if ([name isEqualToString:@"ReturnButton"]) {
+            _gameData.isPaused = NO;
+            [self transitionGameToMenu];
+        }
+    }
     if (_currentScreen == kScore) {
         if ([name isEqualToString:@"RetryButton"]) {
             [self transitionScoreToGame];
         }
         else if ([name isEqualToString:@"ReturnButton"]) {
             [self transitionScoreToMenu];
+            
         }
     }
     

@@ -20,6 +20,7 @@
 @property(nonatomic, retain)NSArray* midiDevices;
 @property(nonatomic, retain)MIDIDevice  *selectedDevice;
 @property(nonatomic, assign)int bestScore;
+@property(nonatomic, assign)bool isPaused;
 
 +(GameData*) sharedData;
 -(void)refreshMidiDevices;

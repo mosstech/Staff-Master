@@ -33,12 +33,11 @@
 }
 
 -(bool)accidentalOverlapForNote:(Note*)note{
-    NSLog(@"note: %@", note.name);
     bool overlap = NO;
     for (Note *noteInChord in self.notes) {
         
         if (note != noteInChord) {
-            if ([note staffLocation] - [noteInChord staffLocation] <= 2 && [note staffLocation] - [noteInChord staffLocation] > 0) {
+            if ([note staffLocation] - [noteInChord staffLocation] <= 2 && [note staffLocation] - [noteInChord staffLocation] > 0 && [noteInChord.accidental intValue] == 1) {
                 if (![self accidentalOverlapForNote:noteInChord]) {
                     overlap = YES;
                 }
@@ -54,9 +53,12 @@
 -(int)centeredLedgerLinesBelowBassClef{
     int linesBelowBassClef = 0;
     for (Note *noteInChord in self.notes) {
-        if ((13 - noteInChord.staffLocation) > linesBelowBassClef ) {
-            linesBelowBassClef = 13 - noteInChord.staffLocation;
+        if ([noteInChord.staff intValue] == 0) {
+            if ((13 - noteInChord.staffLocation) > linesBelowBassClef ) {
+                linesBelowBassClef = 13 - noteInChord.staffLocation;
+            }
         }
+        
     }
     return linesBelowBassClef;
 }
@@ -64,9 +66,11 @@
 -(int)shiftedLedgerLinesBelowBassClef{
     int linesBelowBassClef = 0;
     for (Note *noteInChord in self.notes) {
-        if ([self noteOverlapForNote:noteInChord]) {
-            if ((13 - noteInChord.staffLocation) > linesBelowBassClef ) {
-                linesBelowBassClef = 13 - noteInChord.staffLocation;
+        if ([noteInChord.staff intValue] == 0) {
+            if ([self noteOverlapForNote:noteInChord]) {
+                if ((13 - noteInChord.staffLocation) > linesBelowBassClef ) {
+                    linesBelowBassClef = 13 - noteInChord.staffLocation;
+                }
             }
         }
     }
@@ -76,8 +80,10 @@
 -(int)centeredLedgerLinesAboveBassClef{
     int linesAboveBassClef = 0;
     for (Note *noteInChord in self.notes) {
-        if ((noteInChord.staffLocation - 21) > linesAboveBassClef ) {
-            linesAboveBassClef = noteInChord.staffLocation - 21;
+        if ([noteInChord.staff intValue] == 0) {
+            if ((noteInChord.staffLocation - 21) > linesAboveBassClef ) {
+                linesAboveBassClef = noteInChord.staffLocation - 21;
+            }
         }
     }
     return linesAboveBassClef;
@@ -87,8 +93,10 @@
     int linesAboveBassClef = 0;
     for (Note *noteInChord in self.notes) {
         if ([self noteOverlapForNote:noteInChord]) {
-            if ((noteInChord.staffLocation - 21) > linesAboveBassClef ) {
-                linesAboveBassClef = noteInChord.staffLocation - 21;
+            if ([noteInChord.staff intValue] == 0) {
+                if ((noteInChord.staffLocation - 21) > linesAboveBassClef ) {
+                    linesAboveBassClef = noteInChord.staffLocation - 21;
+                }
             }
         }
     }
@@ -98,8 +106,10 @@
 -(int)centeredLedgerLinesBelowTrebleClef{
     int linesBelowTrebleClef = 0;
     for (Note *noteInChord in self.notes) {
-        if ((25 - noteInChord.staffLocation) > linesBelowTrebleClef ) {
-            linesBelowTrebleClef = 25 - noteInChord.staffLocation;
+        if ([noteInChord.staff intValue] == 1) {
+            if ((25 - noteInChord.staffLocation) > linesBelowTrebleClef ) {
+                linesBelowTrebleClef = 25 - noteInChord.staffLocation;
+            }
         }
     }
     return linesBelowTrebleClef;
@@ -109,8 +119,10 @@
     int linesBelowTrebleClef = 0;
     for (Note *noteInChord in self.notes) {
         if ([self noteOverlapForNote:noteInChord]) {
-            if ((25 - noteInChord.staffLocation) > linesBelowTrebleClef ) {
-                linesBelowTrebleClef = 25 - noteInChord.staffLocation;
+            if ([noteInChord.staff intValue] == 1) {
+                if ((25 - noteInChord.staffLocation) > linesBelowTrebleClef ) {
+                    linesBelowTrebleClef = 25 - noteInChord.staffLocation;
+                }
             }
         }
     }
@@ -120,8 +132,10 @@
 -(int)centeredLedgerLinesAboveTrebleClef{
     int linesAboveTrebleClef = 0;
     for (Note *noteInChord in self.notes) {
-        if ((noteInChord.staffLocation - 33) > linesAboveTrebleClef ) {
-            linesAboveTrebleClef = noteInChord.staffLocation - 33;
+        if ([noteInChord.staff intValue] == 1) {
+            if ((noteInChord.staffLocation - 33) > linesAboveTrebleClef ) {
+                linesAboveTrebleClef = noteInChord.staffLocation - 33;
+            }
         }
     }
     return linesAboveTrebleClef;
@@ -131,8 +145,10 @@
     int linesAboveTrebleClef = 0;
     for (Note *noteInChord in self.notes) {
         if ([self noteOverlapForNote:noteInChord]) {
-            if ((noteInChord.staffLocation - 33) > linesAboveTrebleClef ) {
-                linesAboveTrebleClef = noteInChord.staffLocation - 33;
+            if ([noteInChord.staff intValue] == 1) {
+                if ((noteInChord.staffLocation - 33) > linesAboveTrebleClef ) {
+                    linesAboveTrebleClef = noteInChord.staffLocation - 33;
+                }
             }
         }
     }

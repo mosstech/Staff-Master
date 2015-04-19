@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		820F3AA81A92F0440019026D /* SpriteButton.m in Sources */ = {isa = PBXBuildFile; fileRef = 820F3AA71A92F0440019026D /* SpriteButton.m */; };
+		828BBDFD1AC89A9100A6A4B2 /* Chords.sqlite in Resources */ = {isa = PBXBuildFile; fileRef = 828BBDFC1AC89A9100A6A4B2 /* Chords.sqlite */; };
 		82DFC5751A81C54D000BB94C /* MIDIUtility.m in Sources */ = {isa = PBXBuildFile; fileRef = 82DFC5741A81C54D000BB94C /* MIDIUtility.m */; };
 		82DFC5781A81C5A4000BB94C /* AudioUtility.m in Sources */ = {isa = PBXBuildFile; fileRef = 82DFC5771A81C5A4000BB94C /* AudioUtility.m */; };
 		82DFC57B1A81E252000BB94C /* MIDIDevice.m in Sources */ = {isa = PBXBuildFile; fileRef = 82DFC57A1A81E252000BB94C /* MIDIDevice.m */; };
@@ -21,11 +22,9 @@
 		82E02B571A72B46600747A6E /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 82E02B551A72B46600747A6E /* LaunchScreen.xib */; };
 		82E02B631A72B46600747A6E /* Staff_MasterTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 82E02B621A72B46600747A6E /* Staff_MasterTests.m */; };
 		82E02B711A75585B00747A6E /* GameData.m in Sources */ = {isa = PBXBuildFile; fileRef = 82E02B701A75585B00747A6E /* GameData.m */; };
-		82F6EDD31A9D66D000CC134C /* Chords0.plist in Resources */ = {isa = PBXBuildFile; fileRef = 82F6EDD21A9D66D000CC134C /* Chords0.plist */; };
 		82F6EF3A1AA235A300CC134C /* Note.m in Sources */ = {isa = PBXBuildFile; fileRef = 82F6EF391AA235A300CC134C /* Note.m */; };
 		82F6EF3D1AA235EC00CC134C /* Chord.m in Sources */ = {isa = PBXBuildFile; fileRef = 82F6EF3C1AA235EC00CC134C /* Chord.m */; };
 		82F6EF531AA2DB4600CC134C /* Chords.xcdatamodel in Sources */ = {isa = PBXBuildFile; fileRef = 82F6EF521AA2DB4600CC134C /* Chords.xcdatamodel */; };
-		82F6EF5B1AA3BCD100CC134C /* Chords.sqlite in Resources */ = {isa = PBXBuildFile; fileRef = 82F6EF5A1AA3BCD100CC134C /* Chords.sqlite */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -41,6 +40,7 @@
 /* Begin PBXFileReference section */
 		820F3AA61A92F0440019026D /* SpriteButton.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SpriteButton.h; sourceTree = "<group>"; };
 		820F3AA71A92F0440019026D /* SpriteButton.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SpriteButton.m; sourceTree = "<group>"; };
+		828BBDFC1AC89A9100A6A4B2 /* Chords.sqlite */ = {isa = PBXFileReference; lastKnownFileType = file; path = Chords.sqlite; sourceTree = "<group>"; };
 		82DFC5731A81C54D000BB94C /* MIDIUtility.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MIDIUtility.h; sourceTree = "<group>"; };
 		82DFC5741A81C54D000BB94C /* MIDIUtility.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MIDIUtility.m; sourceTree = "<group>"; };
 		82DFC5761A81C5A4000BB94C /* AudioUtility.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AudioUtility.h; sourceTree = "<group>"; };
@@ -65,13 +65,11 @@
 		82E02B621A72B46600747A6E /* Staff_MasterTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Staff_MasterTests.m; sourceTree = "<group>"; };
 		82E02B6F1A75585B00747A6E /* GameData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GameData.h; sourceTree = "<group>"; };
 		82E02B701A75585B00747A6E /* GameData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GameData.m; sourceTree = "<group>"; };
-		82F6EDD21A9D66D000CC134C /* Chords0.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Chords0.plist; sourceTree = "<group>"; };
 		82F6EF381AA235A300CC134C /* Note.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Note.h; path = ../Note.h; sourceTree = "<group>"; };
 		82F6EF391AA235A300CC134C /* Note.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = Note.m; path = ../Note.m; sourceTree = "<group>"; };
 		82F6EF3B1AA235EC00CC134C /* Chord.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Chord.h; sourceTree = "<group>"; };
 		82F6EF3C1AA235EC00CC134C /* Chord.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Chord.m; sourceTree = "<group>"; };
 		82F6EF521AA2DB4600CC134C /* Chords.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Chords.xcdatamodel; sourceTree = "<group>"; };
-		82F6EF5A1AA3BCD100CC134C /* Chords.sqlite */ = {isa = PBXFileReference; lastKnownFileType = file; path = Chords.sqlite; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -106,7 +104,7 @@
 		820F3AA91A96FB050019026D /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				82F6EDD21A9D66D000CC134C /* Chords0.plist */,
+				828BBDFC1AC89A9100A6A4B2 /* Chords.sqlite */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
@@ -157,7 +155,6 @@
 		82E02B401A72B46600747A6E /* Staff Master */ = {
 			isa = PBXGroup;
 			children = (
-				82F6EF5A1AA3BCD100CC134C /* Chords.sqlite */,
 				82E02B451A72B46600747A6E /* AppDelegate.h */,
 				82E02B461A72B46600747A6E /* AppDelegate.m */,
 				82E02B481A72B46600747A6E /* GameScene.h */,
@@ -285,12 +282,11 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				82F6EF5B1AA3BCD100CC134C /* Chords.sqlite in Resources */,
 				82E02B571A72B46600747A6E /* LaunchScreen.xib in Resources */,
 				82E02B541A72B46600747A6E /* Images.xcassets in Resources */,
 				82E02B4C1A72B46600747A6E /* GameScene.sks in Resources */,
+				828BBDFD1AC89A9100A6A4B2 /* Chords.sqlite in Resources */,
 				82E02B521A72B46600747A6E /* Main.storyboard in Resources */,
-				82F6EDD31A9D66D000CC134C /* Chords0.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -9,7 +9,7 @@
         <relationship name="notes" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Note" inverseName="chord" inverseEntity="Note" syncable="YES"/>
     </entity>
     <entity name="Note" representedClassName="Note" syncable="YES">
-        <attribute name="accidental" optional="YES" attributeType="Boolean" syncable="YES"/>
+        <attribute name="accidental" optional="YES" attributeType="Integer 16" syncable="YES"/>
         <attribute name="intonation" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
         <attribute name="name" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="octave" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
